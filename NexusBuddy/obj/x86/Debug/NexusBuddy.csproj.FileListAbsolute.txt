@@ -1,0 +1,13 @@
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\NexusBuddy2.0.exe.config
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\NexusBuddy2.0.exe
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\NexusBuddy2.0.pdb
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\Microsoft.VisualC.dll
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\System.dll
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\System.Drawing.dll
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\System.Windows.Forms.dll
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\bin\Debug\System.Xml.dll
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\obj\x86\Debug\NexusBuddy.Form1.resources
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\obj\x86\Debug\NexusBuddy.csproj.GenerateResource.Cache
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\obj\x86\Debug\NexusBuddy2.0.exe
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\obj\x86\Debug\NexusBuddy2.0.pdb
+C:\Civ5Mod\IndieStoneDev\NexusBuddy\obj\x86\Debug\NexusBuddy.csprojResolveAssemblyReference.cache

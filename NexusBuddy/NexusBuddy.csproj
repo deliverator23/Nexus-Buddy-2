@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{D0832C92-2D71-498C-AD2E-D1815E446D78}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>NexusBuddy2.3.3</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>
+    </DefineConstants>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
+    <CodeAnalysisRuleSet>BasicCorrectnessRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Fasticon-Animal-Toys-Elephant.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Firaxis.Framework">
+      <HintPath>ReferencedDLLs\Firaxis.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Firaxis.Framework.FirePlace">
+      <HintPath>ReferencedDLLs\Firaxis.Framework.FirePlace.dll</HintPath>
+    </Reference>
+    <Reference Include="Firaxis.Framework.Granny">
+      <HintPath>ReferencedDLLs\Firaxis.Framework.Granny.dll</HintPath>
+    </Reference>
+    <Reference Include="Firaxis.Framework.Granny.ImplWin32">
+      <HintPath>ReferencedDLLs\Firaxis.Framework.Granny.ImplWin32.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualC">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System.Windows.Forms">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyAnimationWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyTransformWrapper.cs" />
+    <Compile Include="NexusBuddy\Settings.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="NexusBuddy\FileOps\BR2Importer.cs" />
+    <Compile Include="NexusBuddy\FileOps\NB2Exporter.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyBoneInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyMeshVertexStructInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyModelInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannySkeletonInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyTransformInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyMaterialWrapper.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderTransparentMatte.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyAnimation.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyBone.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannySkeleton.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyTransform.cs" />
+    <Compile Include="NexusBuddy\FileOps\FBXImporter.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyFile.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyMesh.cs" />
+    <Compile Include="NexusBuddy\Structs\DummyGrannyModel.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyBoneWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyFileWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyMeshInfo.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyMeshWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannyModelWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyWrappers\GrannySkeletonWrapper.cs" />
+    <Compile Include="NexusBuddy\GrannyInfos\GrannyVertexInfo.cs" />
+    <Compile Include="NexusBuddy\Interface\FilteredFileNameEditor.cs" />
+    <Compile Include="NexusBuddy\NexusBuddyApplicationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NexusBuddy\IndieObjects\IndieAnimDef.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieSimpleShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderOpaqueMatteShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderMaskedHairShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderMaskedShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderVelvetShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieBuildingShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLandmarkStencilShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderFurFinShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderFurShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderGlassShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderHairShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderOpaqueClothShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderOpaqueHairShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderSkinShader.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieLeaderTransparencyShader.cs" />
+    <Compile Include="NexusBuddy\IndieObjects\IndieMaterial.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieUnitSkinnedShader.cs" />
+    <Compile Include="NexusBuddy\Interface\ListViewWithComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="NexusBuddy\Program.cs" />
+    <Compile Include="NexusBuddy\Shaders\ShaderUtils.cs" />
+    <Compile Include="NexusBuddy\Utils\BiLookup.cs" />
+    <Compile Include="NexusBuddy\Utils\MemoryUtil.cs" />
+    <Compile Include="NexusBuddy\Utils\NumberUtils.cs" />
+    <Compile Include="NexusBuddy\XMLOps\FTSTriggerSystem.cs" />
+    <Compile Include="NexusBuddy\XMLOps\VisEffects.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="NexusBuddy\NexusBuddyApplicationForm.resx">
+      <DependentUpon>NexusBuddyApplicationForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Fasticon-Animal-Toys-Elephant.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <EmbeddedResource Include="NexusBuddy\GrannyTemplates\model_template.gr2" />
+    <EmbeddedResource Include="NexusBuddy\GrannyTemplates\leader_template.gr2" />
+    <EmbeddedResource Include="NexusBuddy\GrannyTemplates\output_template.gr2" />
+    <EmbeddedResource Include="NexusBuddy\GrannyTemplates\scene_template.gr2" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
