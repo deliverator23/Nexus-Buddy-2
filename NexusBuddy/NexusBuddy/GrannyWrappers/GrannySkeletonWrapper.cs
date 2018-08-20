@@ -24,7 +24,7 @@ namespace NexusBuddy.GrannyWrappers
             m_pkSkeleton = (DummyGrannySkeleton*)Pointer.Unbox(pm_pkSkeleton);
         }
 
-        public unsafe void setName(string name)
+        public void setName(string name)
         {
             *(int*)(m_pkSkeleton) = (int)MemoryUtil.getStringIntPtr(name);
         }
@@ -44,7 +44,7 @@ namespace NexusBuddy.GrannyWrappers
             return ((IntPtr)m_pkSkeleton + 8);
         }
 
-        public unsafe GrannySkeletonInfo readSkeletonInfo()
+        public GrannySkeletonInfo readSkeletonInfo()
         {
             GrannySkeletonInfo skeletonInfo = new GrannySkeletonInfo();
             List<GrannyBoneInfo> boneInfos = new List<GrannyBoneInfo>();
@@ -77,7 +77,7 @@ namespace NexusBuddy.GrannyWrappers
             return skeletonInfo;
         }
 
-        public unsafe void writeSkeletonInfo(GrannySkeletonInfo skeletonInfo)
+        public void writeSkeletonInfo(GrannySkeletonInfo skeletonInfo)
         {
             int bonesCount = skeletonInfo.bones.Count;
             setNumBones(bonesCount);
@@ -96,35 +96,6 @@ namespace NexusBuddy.GrannyWrappers
                 *(int*)(newBonesPtr + (i * boneSize) + 0) = (int)MemoryUtil.getStringIntPtr(currentBone.name);
 
                 *(int*)(newBonesPtr + (i * boneSize) + 4) = currentBone.parentIndex;
-
-                float[] position = currentBone.localTransform.position;
-                float[] orientation = currentBone.localTransform.orientation;
-
-                //bool hasPosition = true;
-                //bool hasOrientation = true;
-
-                //if (NumberUtils.almostEquals(position[0], 0.0f, 4) && NumberUtils.almostEquals(position[1], 0.0f, 4) && NumberUtils.almostEquals(position[2], 0.0f, 4))
-                //{
-                //    hasPosition = false;
-                //}
-
-                //if (NumberUtils.almostEquals(orientation[0], 0.0f, 5) && NumberUtils.almostEquals(orientation[1], 0.0f, 5) && 
-                //    NumberUtils.almostEquals(orientation[2], 0.0f, 5) && NumberUtils.almostEquals(orientation[3], 1.0f, 5))
-                //{
-                //    hasOrientation = false;
-                //}
-
-                //if (hasPosition) {
-                //    flags = flags + 1;
-                //}
-
-                //if (hasOrientation) {
-                //    flags = flags + 2;
-                //}
-
-                //if (currentBone.localTransform.flags.HasFlag(ETransformFlags.GrannyHasScaleShear)) {
-                //    flags = flags + 4;
-                //}
 
                 int flags = currentBone.localTransform.flags;
 
@@ -158,40 +129,3 @@ namespace NexusBuddy.GrannyWrappers
         }
     }
 }
-
-
-// Bone Spec
-// LENGTH = 152
-
-// bone + 0 > Name
-// bone + 4 > Parent Index (int)
-// bone + 8 > transform    flags (int)
-// bone + 12 > transform   posx (floats)
-// bone + 16 > transform   posy
-// bone + 20 > transform   posz
-// +24 > rotx (floats)
-// +28 > roty
-// +32 > rotz
-// +36 > rotw
-// 40,44,48,52,56,60,64,68,72 > scaleShear matrix (floats)
-
-// 76,80,84,88, 92,96,100,104, 108,112,116,120, 124,128,132,136 > inverse world matrix (floats)
-
-// 140 LOD Error 
-// 144 Num Extended Datas
-// 148 Extended Datas Pointer
-
-// Flags
-// 
-// 0 = No Position or Orientation
-// 1 = Position Only
-// 2 = Orientation Only - not in use?
-// 3 = Position and Orientation
-
-
-// FIX!
-// +60 > rotx (floats)
-// +64 > roty
-// +68 > rotz
-// +72 > rotw
-// 24,28,32,36,40,44,48,52,56 > scaleShear matrix (floats)

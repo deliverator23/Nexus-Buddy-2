@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Firaxis.Framework.Granny;
 using NexusBuddy.GrannyInfos;
 using NexusBuddy.GrannyWrappers;
@@ -10,12 +8,40 @@ using NexusBuddy.Utils;
 using System.Globalization;
 using System.Windows.Media.Media3D;
 using System.Runtime.ExceptionServices;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace NexusBuddy.FileOps
 {
     class NB2Exporter
     {
         private static Random random = new Random();
+
+        public static void batchExport(GrannyContext grannyContext, string unitListFile)
+        {
+            StreamReader streamReader = new StreamReader(unitListFile);
+            
+            string directory = Path.GetDirectoryName(unitListFile);
+
+            string regexString = "(.*);(.*);(.*)";
+
+            while (!streamReader.EndOfStream)
+            {
+                string currentLine = streamReader.ReadLine();
+
+                Regex regex = new Regex(regexString);
+                MatchCollection mc = regex.Matches(currentLine);
+                foreach (Match m in mc)
+                {
+                    string gr2Filename = m.Groups[1].Value.Trim().ToLower();
+                    IGrannyFile grannyFile = grannyContext.LoadGrannyFile(directory + "\\" + gr2Filename);
+                    NexusBuddyApplicationForm.loadedFile = grannyFile;
+                    NexusBuddyApplicationForm.form.refreshAppData();
+                    exportAllModelsToNB2(grannyFile);
+                }
+
+            }
+        }
 
         public static void exportAllModelsToNB2(IGrannyFile grannyFile)
         {
@@ -77,7 +103,6 @@ namespace NexusBuddy.FileOps
             time = 0;
 
             int retryCount = 0;
-            //int retryLimit = 5;
             Boolean success = false;
 
             List<List<float[]>> boneFrameLists = new List<List<float[]>>();
@@ -121,7 +146,6 @@ namespace NexusBuddy.FileOps
             }
 
             string fileExtension = "__" + timeWindowStart.ToString("f3") + "-" + timeWindowEnd.ToString("f3") + ".na2";
-            //string fileExtension = ".na2";
 
             string outputFilename = filename.Replace(".gr2", fileExtension);
             outputFilename = outputFilename.Replace(".GR2", fileExtension);
@@ -163,7 +187,6 @@ namespace NexusBuddy.FileOps
 
         public static void exportNB2Model(IGrannyFile grannyFile, int modelId)
         {
-            bool useOldMethod = false; // todo - remove this code
             string fileExtension = ".nb2";
             string outputFilename = "";
             string numberFormat = "f6";
@@ -179,7 +202,7 @@ namespace NexusBuddy.FileOps
                 outputFilename = outputFilename.Replace(".GR2", fileExtension);
             }
 
-            StreamWriter outputWriter = new StreamWriter(new FileStream(outputFilename, FileMode.Create));
+            StreamWriter outputWriter = new StreamWriter(new FileStream(outputFilename.ToLower(), FileMode.Create));
 
             IGrannyModel model = grannyFile.Models[modelId];
             IGrannySkeleton skeleton = model.Skeleton;
@@ -211,17 +234,8 @@ namespace NexusBuddy.FileOps
             List<GrannyMeshInfo> grannyMeshInfos = new List<GrannyMeshInfo>();
             for (int i = 0; i < model.MeshBindings.Count; i++)
             {
-                if (useOldMethod)
-                {
-                    // Old way - using gr2conv.exe
-                    grannyMeshInfos.Add(loadMeshInfo_gr2conv_exe(grannyFile, meshBindingToMesh[i]));
-                }
-                else
-                {
-                    // New way - all C# code!
-                    GrannyMeshWrapper meshWrapper = new GrannyMeshWrapper(model.MeshBindings[i]);
-                    grannyMeshInfos.Add(meshWrapper.getMeshInfo());
-                }
+                GrannyMeshWrapper meshWrapper = new GrannyMeshWrapper(model.MeshBindings[i]);
+                grannyMeshInfos.Add(meshWrapper.getMeshInfo());
             }
 
             BiLookup<int, string> boneLookup = new BiLookup<int, string>();
@@ -243,6 +257,22 @@ namespace NexusBuddy.FileOps
             outputWriter.WriteLine("Frames: 30");
             outputWriter.WriteLine("Frame: 1");
 
+            List<IndieMaterial> modelMaterials = new List<IndieMaterial>();
+            foreach (IGrannyMesh mesh in model.MeshBindings)
+            {
+                IGrannyMaterial material = mesh.MaterialBindings[0];
+                foreach (ListViewItem materialListItem in NexusBuddyApplicationForm.form.materialList.Items)
+                {
+                    IndieMaterial shader = (IndieMaterial)materialListItem.Tag;
+                    GrannyMaterialWrapper matWrap1 = new GrannyMaterialWrapper(shader.GetMaterial());
+                    GrannyMaterialWrapper matWrap2 = new GrannyMaterialWrapper(material);
+                    if (matWrap1.getName().Equals(matWrap2.getName()))
+                    {
+                        modelMaterials.Add(shader);
+                    }
+                }
+            }
+
             // Write Meshes
             outputWriter.WriteLine("Meshes: " + model.MeshBindings.Count);
             for (int mi = 0; mi < grannyMeshInfos.Count; mi++)
@@ -256,7 +286,19 @@ namespace NexusBuddy.FileOps
                 {
                     meshName += meshNameCount[meshName];
                 }
-                outputWriter.WriteLine("\"" + meshName + "\" 0 0");
+
+                var materialBindingName = model.MeshBindings[mi].MaterialBindings[0].Name;
+                var materialIndex = 0;
+                foreach (IndieMaterial material in modelMaterials)
+                {
+                    if (materialBindingName.Equals(material.GetMaterial().Name))
+                    {
+                        break;
+                    }
+                    materialIndex++;
+                }
+
+                outputWriter.WriteLine("\"" + meshName + "\" 0 " + materialIndex);
 
                 // Write Vertices
                 outputWriter.WriteLine(grannyMeshInfo.vertices.Count);
@@ -306,17 +348,49 @@ namespace NexusBuddy.FileOps
                 }
             }
 
-            // Write Material
-            outputWriter.WriteLine("Materials: 1");
-            outputWriter.WriteLine("\"Material_0\"");
-            outputWriter.WriteLine("0.200000 0.200000 0.200000 1.000000");
-            outputWriter.WriteLine("0.800000 0.800000 0.800000 1.000000");
-            outputWriter.WriteLine("0.000000 0.000000 0.000000 1.000000");
-            outputWriter.WriteLine("0.000000 0.000000 0.000000 1.000000");
-            outputWriter.WriteLine("0.000000");
-            outputWriter.WriteLine("1.000000");
-            outputWriter.WriteLine("\"Material_0\"");
-            outputWriter.WriteLine("\"\"");
+            // Write Materials
+            outputWriter.WriteLine("Materials: " + modelMaterials.Count);
+            for (int i = 0; i < modelMaterials.Count; i++ ) { 
+                outputWriter.WriteLine("\"" + modelMaterials[i].GetMaterial().Name + "\"");
+                outputWriter.WriteLine("0.200000 0.200000 0.200000 1.000000");
+                outputWriter.WriteLine("0.800000 0.800000 0.800000 1.000000");
+                outputWriter.WriteLine("0.000000 0.000000 0.000000 1.000000");
+                outputWriter.WriteLine("0.000000 0.000000 0.000000 1.000000");
+                outputWriter.WriteLine("0.000000");
+                outputWriter.WriteLine("1.000000");
+                string map1 = "ColorMap_" + i;
+                string map2 = "AlphaMap_" + i;
+                string baseMap;
+                string srefmap;
+                IndieMaterial shader = modelMaterials[i];
+                if (shader.GetType() == typeof(IndieBuildingShader))
+                {
+                    baseMap = shader.Diffuse;
+                    srefmap = shader.BuildingSREF;
+                }
+                else if (shader.GetType() == typeof(IndieLandmarkStencilShader))
+                {
+                    baseMap = shader.BaseTextureMap;
+                    srefmap = shader.SpecTextureMap;
+                }
+                else
+                {
+                    baseMap = shader.BaseTextureMap;
+                    srefmap = shader.SREFMap;
+                }
+
+                if (!String.IsNullOrEmpty(baseMap))
+                {
+                    map1 = baseMap;
+                }
+                
+                if (!String.IsNullOrEmpty(srefmap))
+                {
+                    map2 = srefmap;
+                }
+                outputWriter.WriteLine("\""+ map1 + "\"");
+                outputWriter.WriteLine("\"" + map2 + "\"");
+            }
 
             // Write Bones
             outputWriter.WriteLine("Bones: " + skeleton.Bones.Count);
@@ -342,7 +416,7 @@ namespace NexusBuddy.FileOps
 
                 //Matrix3D boneWorldMatrix = getBoneWorldMatrix(bone);
 
-                //ETransformFlags transformFlags = transform.Flags; 
+                //ETransformFlags transformFlags = transform.Flags;
                 //bool hasPosition = transformFlags.HasFlag(ETransformFlags.GrannyHasPosition);
                 //bool hasOrientation = transformFlags.HasFlag(ETransformFlags.GrannyHasOrientation);
 
@@ -350,18 +424,6 @@ namespace NexusBuddy.FileOps
 
                 outputWriter.WriteLine("0 " + position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
                                                 orientation[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[3].ToString(numberFormat, CultureInfo.InvariantCulture));
-
-                //outputWriter.WriteLine("0 " + position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                orientation[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[3].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M11.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M12.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M13.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M14.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M21.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M22.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M23.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M24.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M31.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M32.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.M33.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M34.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.OffsetX.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.OffsetY.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                //                                boneWorldMatrix.OffsetZ.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + boneWorldMatrix.M44.ToString(numberFormat, CultureInfo.InvariantCulture) 
-                //                                );
 
                 // number of position keys
                 outputWriter.WriteLine("0");
@@ -386,7 +448,7 @@ namespace NexusBuddy.FileOps
             return inverseWorldMatrix;
         }
 
-        private static double[] getBoneWorldPosition(IGrannyBone bone)
+        public static double[] getBoneWorldPosition(IGrannyBone bone)
         {
             Matrix3D worldMatrix = getBoneWorldMatrix(bone);
 
@@ -395,11 +457,10 @@ namespace NexusBuddy.FileOps
             bonePosition[1] = worldMatrix.OffsetY;
             bonePosition[2] = worldMatrix.OffsetZ;
 
-            //MemoryUtil.memLogLine("IWT Inv boneId:" + bi + " x:" + inverseWorldMatrix.OffsetX + " y: " + inverseWorldMatrix.OffsetY + " z: " + inverseWorldMatrix.OffsetZ);
             return bonePosition;
         }
 
-        private static int getBoneIdForBoneName(BiLookup<int, string> boneLookup, Dictionary<string, double[]> boneNameToPositionMap, string boneName, float boneWeight, float[] vertexPosition)
+        public static int getBoneIdForBoneName(BiLookup<int, string> boneLookup, Dictionary<string, double[]> boneNameToPositionMap, string boneName, float boneWeight, float[] vertexPosition)
         {
             int boneId;
             if (boneName.Equals(""))
@@ -443,200 +504,6 @@ namespace NexusBuddy.FileOps
                 boneId = boneLookup[boneName][0];
             }
             return boneId;
-        }
-
-        public static GrannyMeshInfo loadMeshInfo_gr2conv_exe(IGrannyFile grannyFile, int meshIndex)
-        {
-
-            if (grannyFile != null)
-            {
-                string tempPath = Path.GetTempPath();
-                string outputFilename = tempPath + "tempmesh_";
-                outputFilename += grannyFile.Meshes[meshIndex].Name;
-                outputFilename += "_";
-                outputFilename += random.Next(100000).ToString();
-                outputFilename += random.Next(100000).ToString();
-                outputFilename += random.Next(10000).ToString();
-                outputFilename += ".msh";
-
-                Process process = new Process();
-
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.CreateNoWindow = true;
-                startInfo.UseShellExecute = true;
-                startInfo.FileName = "gr2conv.exe";
-                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                string args = grannyFile.Filename + " " + outputFilename + " " + meshIndex;
-                startInfo.Arguments = args;
-
-                process.StartInfo = startInfo;
-                process.Start();
-                process.WaitForExit();
-
-                GrannyMeshInfo meshInfo = loadMeshInfoFromFile(outputFilename, true);
-
-                return meshInfo;
-            }
-
-            return null;
-        }
-
-        public static GrannyMeshInfo loadMeshInfoFromFile(string filename, bool deleteFile)
-        {
-            string currentLine = "";
-            GrannyMeshInfo meshInfo = new GrannyMeshInfo();
-
-            // Read Bone Bindings
-            List<string> bb = new List<string>();
-            StreamReader streamReader = new StreamReader(filename);
-            while (!currentLine.Equals("Vertices"))
-            {
-                currentLine = streamReader.ReadLine();
-                if (!currentLine.Equals("Vertices") && !currentLine.Equals("BoneBindings"))
-                {
-                    string boneName = currentLine.Substring(currentLine.IndexOf(":") + 1, currentLine.Length - currentLine.IndexOf(":") - 1);
-                    bb.Add(boneName.Trim());
-                }
-            }
-            meshInfo.boneBindings = bb;
-
-            // Read Vertex Data
-            List<GrannyVertexInfo> vertices = new List<GrannyVertexInfo>();
-            int lastIndex = 0;
-            GrannyVertexInfo currentVertex = new GrannyVertexInfo();
-            while (!currentLine.StartsWith("Material"))
-            {
-                //e.g.
-                //0:Position: -20.334412 5.545011 88.681549
-                //0:BoneWeights: 255 0 0 0
-                //0:BoneIndices: 14 14 14 14
-                //0:Normal: -0.166870 0.948242 0.270752
-                //0:TextureCoordinates: 0.367676 0.697266    
-                currentLine = streamReader.ReadLine();
-                if (!currentLine.StartsWith("Material"))
-                {
-                    string id = "0", type = "", number1 = null, number2 = null, number3 = null, number4 = null;
-
-                    Regex regex = new Regex("([0-9]+):(.+): ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*)");
-                    MatchCollection mc = regex.Matches(currentLine);
-                    foreach (Match m in mc)
-                    {
-                        id = m.Groups[1].Value.Trim();
-                        type = m.Groups[2].Value.Trim();
-                        number1 = m.Groups[3].Value.Trim();
-                        number2 = m.Groups[4].Value.Trim();
-                        number3 = m.Groups[5].Value.Trim();
-                        number4 = m.Groups[6].Value.Trim();
-                        break;
-                    }
-                    regex = new Regex("([0-9]+):(.+): ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*)");
-                    mc = regex.Matches(currentLine);
-                    foreach (Match m in mc)
-                    {
-                        id = m.Groups[1].Value.Trim();
-                        type = m.Groups[2].Value.Trim();
-                        number1 = m.Groups[3].Value.Trim();
-                        number2 = m.Groups[4].Value.Trim();
-                        number3 = m.Groups[5].Value.Trim();
-                        break;
-                    }
-                    regex = new Regex("([0-9]+):(.+): ([-+]?[0-9]+\\.?[0-9]*) ([-+]?[0-9]+\\.?[0-9]*)");
-                    mc = regex.Matches(currentLine);
-                    foreach (Match m in mc)
-                    {
-                        id = m.Groups[1].Value.Trim();
-                        type = m.Groups[2].Value.Trim();
-                        number1 = m.Groups[3].Value.Trim();
-                        number2 = m.Groups[4].Value.Trim();
-                        break;
-                    }
-
-                    int index = int.Parse(id, CultureInfo.InvariantCulture);
-
-                    if (index != lastIndex)
-                    {
-                        vertices.Add(currentVertex);
-                        currentVertex = new GrannyVertexInfo();
-                    }
-
-                    if (type.Equals("Position") && number1 != null && number2 != null && number3 != null)
-                    {
-                        currentVertex.position = new float[3];
-                        currentVertex.position[0] = float.Parse(number1, CultureInfo.InvariantCulture);
-                        currentVertex.position[1] = float.Parse(number2, CultureInfo.InvariantCulture);
-                        currentVertex.position[2] = float.Parse(number3, CultureInfo.InvariantCulture);
-                    }
-                    if (type.Equals("Normal") && number1 != null && number2 != null && number3 != null)
-                    {
-                        currentVertex.normal = new float[3];
-                        currentVertex.normal[0] = float.Parse(number1, CultureInfo.InvariantCulture);
-                        currentVertex.normal[1] = float.Parse(number2, CultureInfo.InvariantCulture);
-                        currentVertex.normal[2] = float.Parse(number3, CultureInfo.InvariantCulture);
-                    }
-                    if (type.Equals("BoneWeights") && number1 != null && number2 != null && number3 != null && number4 != null)
-                    {
-                        currentVertex.boneWeights = new int[4];
-                        currentVertex.boneWeights[0] = int.Parse(number1, CultureInfo.InvariantCulture);
-                        currentVertex.boneWeights[1] = int.Parse(number2, CultureInfo.InvariantCulture);
-                        currentVertex.boneWeights[2] = int.Parse(number3, CultureInfo.InvariantCulture);
-                        currentVertex.boneWeights[3] = int.Parse(number4, CultureInfo.InvariantCulture);
-                    }
-                    if (type.Equals("BoneIndices") && number1 != null && number2 != null && number3 != null && number4 != null)
-                    {
-                        currentVertex.boneIndices = new int[4];
-                        currentVertex.boneIndices[0] = int.Parse(number1, CultureInfo.InvariantCulture);
-                        currentVertex.boneIndices[1] = int.Parse(number2, CultureInfo.InvariantCulture);
-                        currentVertex.boneIndices[2] = int.Parse(number3, CultureInfo.InvariantCulture);
-                        currentVertex.boneIndices[3] = int.Parse(number4, CultureInfo.InvariantCulture);
-                    }
-                    if (type.Equals("TextureCoordinates") && number1 != null && number2 != null)
-                    {
-                        currentVertex.uv = new float[2];
-                        currentVertex.uv[0] = float.Parse(number1, CultureInfo.InvariantCulture);
-                        currentVertex.uv[1] = float.Parse(number2, CultureInfo.InvariantCulture);
-                    }
-
-                    lastIndex = index;
-                }
-            }
-            vertices.Add(currentVertex);
-            meshInfo.vertices = vertices;
-            string materialName = currentLine.Substring(currentLine.IndexOf(":") + 1, currentLine.Length - currentLine.IndexOf(":") - 1).Trim();
-            meshInfo.materialName = materialName;
-
-            // Read Triangles
-            List<int[]> triangles = new List<int[]>();
-            while (!currentLine.Equals("end"))
-            {
-                currentLine = streamReader.ReadLine();
-                if (!currentLine.Equals("end"))
-                {
-                    Regex regex = new Regex("([0-9]+) ([0-9]+) ([0-9]+)");
-                    MatchCollection mc = regex.Matches(currentLine);
-                    foreach (Match m in mc)
-                    {
-                        int[] triangle = new int[3];
-                        triangle[0] = int.Parse(m.Groups[1].Value.Trim(), CultureInfo.InvariantCulture);
-                        triangle[1] = int.Parse(m.Groups[2].Value.Trim(), CultureInfo.InvariantCulture);
-                        triangle[2] = int.Parse(m.Groups[3].Value.Trim(), CultureInfo.InvariantCulture);
-                        triangles.Add(triangle);
-                        break;
-                    }
-                }
-            }
-            meshInfo.triangles = triangles;
-            streamReader.Close();
-
-            if (deleteFile)
-            {
-                try
-                {
-                    File.Delete(filename);
-                }
-                catch (Exception) { }
-            }
-
-            return meshInfo;
         }
     }
 }

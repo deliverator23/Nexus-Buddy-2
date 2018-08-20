@@ -17,7 +17,15 @@ namespace NexusBuddy
 
         public static string trimPathFromFilename(String filename)
         {
-            return filename.Substring(filename.LastIndexOf("\\") + 1);
+            if (filename != null)
+            {
+                return filename.Substring(filename.LastIndexOf("\\") + 1);
+            }
+            else
+            {
+                return "";
+            }
+            
         }
     }
 }

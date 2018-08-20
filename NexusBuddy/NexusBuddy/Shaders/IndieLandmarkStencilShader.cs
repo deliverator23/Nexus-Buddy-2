@@ -7,7 +7,7 @@ namespace NexusBuddy
 	internal class IndieLandmarkStencilShader : IndieMaterial
 	{
 		[Category("Landmark Stencil Materials"), DisplayName("BaseTextureMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string BaseTextureMap
+		public override string BaseTextureMap 
 		{
 			get
 			{
@@ -31,7 +31,7 @@ namespace NexusBuddy
 			}
 		}
 		[Category("Landmark Stencil Materials"), DisplayName("SpecTextureMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string SpecTextureMap
+		public override string SpecTextureMap
 		{
 			get
 			{

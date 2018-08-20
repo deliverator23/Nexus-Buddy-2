@@ -27,8 +27,8 @@ namespace NexusBuddy
 		public static NexusBuddyApplicationForm form;
 		public static IGrannyFile loadedFile;
         public static int major_version = 2;
-        public static int minor_version = 3;
-        public static int sub_minor_version = 3;
+        public static int minor_version = 5;
+        public static int sub_minor_version = 0;
 
         private static string loadedStringDatabaseFilename;
         private string templateFilename;
@@ -92,7 +92,7 @@ namespace NexusBuddy
         private ColumnHeader MeshName;
         private ColumnHeader Material;
         private SplitContainer grannyFileTabContainer;
-        private ListView materialList;
+        public ListView materialList;
         private ColumnHeader materialNameHeader;
         private ColumnHeader materialTypeHeader;
         private Panel materialButtonsPanel;
@@ -137,12 +137,15 @@ namespace NexusBuddy
         private Button removeAnimationsButton;
         private Button resaveAllFBXAsAnimsButton;
         private Button cleanFTSXMLButton;
+        private Button exportBR2Button;
         private Label rescaleFactorLabel;
         private Button insertAdjustmentBoneButton;
         private TextBox rescaleFactorTextBox;
         private ComboBox bonesComboBox;
         private Label rescaleBoneNameLabel;
         private Button rescaleNamedBoneButton;
+        private Button removeNamedBoneButton;
+
         private Button exportNA2Button;
         private Label endTImeTextBoxLabel;
         private Label startTimeTextBoxLabel;
@@ -399,10 +402,9 @@ namespace NexusBuddy
                     indieLeaderTransparentMatteShader.AddToListView(this.materialList);
                     return;
                 }
-                if (shaderSet == "UnitShader_Skinned")
+                if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader")
 				{
 					IndieUnitSkinnedShader indieUnitSkinnedShader = new IndieUnitSkinnedShader(mat);
-                    //indieUnitSkinnedShader.SREFMap = "blacksref_sref.dds";
 					indieUnitSkinnedShader.AddToListView(this.materialList);
 					return;
 				}
@@ -427,7 +429,7 @@ namespace NexusBuddy
             this.fileInfoTextBox.Text = this.fileInfoTextBox.Text + message;
         }
 
-		private void refreshAppData()
+		public void refreshAppData()
 		{
             string fileInfo = "";
             Dictionary<string, int> materialNameCount = new Dictionary<string, int>();
@@ -453,6 +455,7 @@ namespace NexusBuddy
                     {
                         bonesComboBox.Items.Add(bone.Name);
                     }
+                    bonesComboBox.SelectedIndex = 0;
                 }
 
                 if (this.modelList.Items.Count != NexusBuddyApplicationForm.loadedFile.Models.Count)
@@ -470,21 +473,31 @@ namespace NexusBuddy
                         this.AddMeshToListbox(currentMesh);
                     }
                 }
-			    foreach (IGrannyMaterial currentMaterial in NexusBuddyApplicationForm.loadedFile.Materials)
-			    {
-                    if (!materialNameCount.ContainsKey(currentMaterial.Name))
+                foreach (IGrannyMaterial currentMaterial in NexusBuddyApplicationForm.loadedFile.Materials)
+                {
+                    int materialIndex = 0;
+                    GrannyMaterialWrapper materialWrapper = new GrannyMaterialWrapper(currentMaterial);
+                    string currentMaterialName = materialWrapper.getName();
+
+                    if (currentMaterialName.Equals(""))
                     {
-                        materialNameCount.Add(currentMaterial.Name, 1);
+                        currentMaterialName = "Material" + materialIndex;
+                    }
+
+                    if (!materialNameCount.ContainsKey(currentMaterialName))
+                    {
+                        materialNameCount.Add(currentMaterialName, 1);
                     }
                     else
                     {
-                        materialNameCount[currentMaterial.Name] = materialNameCount[currentMaterial.Name] + 1;
-                        GrannyMaterialWrapper materialWrapper = new GrannyMaterialWrapper(currentMaterial);
-                        String newName = currentMaterial.Name + "_" + materialNameCount[currentMaterial.Name];
+                        materialNameCount[currentMaterialName] = materialNameCount[currentMaterialName] + 1;
+                        //materialWrapper = new GrannyMaterialWrapper(currentMaterial);
+                        String newName = currentMaterialName + "_" + materialNameCount[currentMaterialName];
                         materialWrapper.setName(newName);
                     }
-                    this.AddMaterialToListbox(currentMaterial); 
-			    }
+                    this.AddMaterialToListbox(currentMaterial);
+                    materialIndex = materialIndex + 1;
+                }
                 foreach (IGrannyAnimation currentAnimation in NexusBuddyApplicationForm.loadedFile.Animations)
 			    {
                     this.AddAnimToListbox(currentAnimation);
@@ -497,7 +510,8 @@ namespace NexusBuddy
                 if (file.Models.Count > 0)
                 {
                     fileInfo += "Current Model: " + file.Models[currentModelIndex].Name + " (Index:" + currentModelIndex + ")" + System.Environment.NewLine;
-                    fileInfo += "Meshes (Current Model): " + file.Models[currentModelIndex].MeshBindings.Count + "     ";
+                    fileInfo += "Bones (Current Model): " + file.Models[currentModelIndex].Skeleton.Bones.Count + "     ";
+                    fileInfo += "Meshes (Current Model): " + file.Models[currentModelIndex].MeshBindings.Count + "     ";            
                 }
                 fileInfo += "Meshes (Total): " + file.Meshes.Count + System.Environment.NewLine;
                 fileInfo += "Materials: " + file.Materials.Count + System.Environment.NewLine;
@@ -528,7 +542,7 @@ namespace NexusBuddy
 			}
 		}
 
-        private unsafe void rescaleButtonClick(object sender, EventArgs e)
+        private void rescaleButtonClick(object sender, EventArgs e)
         {
             GrannySkeletonWrapper skeletonWrapper = new GrannySkeletonWrapper(loadedFile.Models[currentModelIndex].Skeleton);
             GrannySkeletonInfo skeletonInfo = skeletonWrapper.readSkeletonInfo();
@@ -541,9 +555,9 @@ namespace NexusBuddy
             float scaleFactor = 1f;
             try
             {
-                scaleFactor = Single.Parse(rescaleFactorTextBox.Text, CultureInfo.InvariantCulture);
+                scaleFactor = float.Parse(rescaleFactorTextBox.Text, CultureInfo.InvariantCulture);
             }
-            catch (FormatException exception) {}
+            catch (FormatException) {}
 
             Vector3D axisVector = new Vector3D(1.0d, 0.0d, 0.0d);
             if (axisComboBox.SelectedIndex == 1)
@@ -558,9 +572,9 @@ namespace NexusBuddy
             float angle = 1f;
             try
             {
-                angle = Single.Parse(angleTextBox.Text, CultureInfo.InvariantCulture);
+                angle = float.Parse(angleTextBox.Text, CultureInfo.InvariantCulture);
             }
-            catch (FormatException exception) { }
+            catch (FormatException) { }
             
             System.Windows.Media.Media3D.Quaternion quat = new System.Windows.Media.Media3D.Quaternion(axisVector, angle);
 
@@ -598,7 +612,19 @@ namespace NexusBuddy
             refreshAppDataWithMessage("ADJUSTMENT BONE INSERTED.");
         }
 
-        private unsafe void rescaleNamedBoneButtonClick(object sender, EventArgs e)
+	    private void removeNamedBoneButtonClick(object sender, EventArgs e)
+	    {
+            GrannySkeletonWrapper skeletonWrapper = new GrannySkeletonWrapper(loadedFile.Models[currentModelIndex].Skeleton);
+            GrannySkeletonInfo skeletonInfo = skeletonWrapper.readSkeletonInfo();
+
+	        int boneIdToDelete = bonesComboBox.SelectedIndex;
+	        skeletonInfo.bones.RemoveAt(boneIdToDelete);
+            skeletonWrapper.writeSkeletonInfo(skeletonInfo);
+            saveAction();
+            refreshAppDataWithMessage("BONE REMOVED.");
+        }
+
+	    private void rescaleNamedBoneButtonClick(object sender, EventArgs e)
         {
             GrannySkeletonWrapper skeletonWrapper = new GrannySkeletonWrapper(loadedFile.Models[currentModelIndex].Skeleton);
             GrannySkeletonInfo skeletonInfo = skeletonWrapper.readSkeletonInfo();
@@ -624,6 +650,21 @@ namespace NexusBuddy
             skeletonWrapper.writeSkeletonInfo(skeletonInfo);
             saveAction();
             refreshAppDataWithMessage("RESCALE BONE ADDED.");
+        }
+
+        private unsafe void batchExportNB2(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "dat files (*.dat) | *.dat";
+            openFileDialog.FilterIndex = 0;
+            openFileDialog.RestoreDirectory = true;
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                GrannyContext grannyContext = Context.Get<GrannyContext>();
+                NB2Exporter.batchExport(grannyContext, openFileDialog.FileName);
+
+                refreshAppDataWithMessage("Batch export complete!");
+            }
         }
 
         private unsafe void exportNA2ButtonClick(object sender, EventArgs e)
@@ -823,8 +864,9 @@ namespace NexusBuddy
                 }
                 File.Copy(openFilename, tempFilename);
             }
-
+            int z = 1;
             IGrannyFile targetFile = grannyContext.LoadGrannyFile(tempFilename);
+            z = 2;
             return targetFile;
         }
 
@@ -922,10 +964,9 @@ namespace NexusBuddy
 
         public void saveAsAction(IGrannyFile fileToSave, string fileName, bool updateAppDataAndSaveMessage)
         {
-
             GrannyFileWrapper fileWrapper = new GrannyFileWrapper(fileToSave);
             setExporterInfo(fileWrapper);
-
+            
             string tempStagingFileName = fileName.Replace(".gr2", "_temp_" + this.rand.Next(1000000).ToString() + this.rand.Next(1000000).ToString() + ".gr2");
             fileToSave.Filename = tempStagingFileName;
             fileToSave.Source = "Tool";
@@ -1003,6 +1044,18 @@ namespace NexusBuddy
                     MemoryUtil.memLogLine(name);
                 }
             }
+        }
+
+        private void exportBR2ButtonClick(object sender, EventArgs e)
+        {
+            if (NexusBuddyApplicationForm.loadedFile == null)
+            {
+                MessageBox.Show("You need to open a file before you can export to BR2!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                return;
+            }
+
+            BR2Importer.br2Export(loadedFile, currentModelIndex);
+            refreshAppDataWithMessage("EXPORT TO BR2 COMPLETE.");
         }
 
         private void cleanFTSXMLButtonClick(object sender, EventArgs e)
@@ -2014,12 +2067,14 @@ namespace NexusBuddy
             this.exportNA2Button = new System.Windows.Forms.Button();
             this.rescaleBoneNameLabel = new System.Windows.Forms.Label();
             this.rescaleNamedBoneButton = new System.Windows.Forms.Button();
+            this.removeNamedBoneButton = new System.Windows.Forms.Button();
             this.bonesComboBox = new System.Windows.Forms.ComboBox();
             this.rescaleFactorLabel = new System.Windows.Forms.Label();
             this.insertAdjustmentBoneButton = new System.Windows.Forms.Button();
             this.angleTextBox = new System.Windows.Forms.TextBox();
             this.rescaleFactorTextBox = new System.Windows.Forms.TextBox();
             this.cleanFTSXMLButton = new System.Windows.Forms.Button();
+            this.exportBR2Button = new System.Windows.Forms.Button();
             this.removeAnimationsButton = new System.Windows.Forms.Button();
             this.resaveAllFBXAsAnimsButton = new System.Windows.Forms.Button();
             this.templateBR2OverwriteLabel = new System.Windows.Forms.Label();
@@ -2472,12 +2527,15 @@ namespace NexusBuddy
             this.otherActionsTabPage.Controls.Add(this.exportNA2Button);
             this.otherActionsTabPage.Controls.Add(this.rescaleBoneNameLabel);
             this.otherActionsTabPage.Controls.Add(this.rescaleNamedBoneButton);
+            this.otherActionsTabPage.Controls.Add(this.removeNamedBoneButton);
+
             this.otherActionsTabPage.Controls.Add(this.bonesComboBox);
             this.otherActionsTabPage.Controls.Add(this.rescaleFactorLabel);
             this.otherActionsTabPage.Controls.Add(this.insertAdjustmentBoneButton);
             this.otherActionsTabPage.Controls.Add(this.angleTextBox);
             this.otherActionsTabPage.Controls.Add(this.rescaleFactorTextBox);
             this.otherActionsTabPage.Controls.Add(this.cleanFTSXMLButton);
+            this.otherActionsTabPage.Controls.Add(this.exportBR2Button);
             this.otherActionsTabPage.Controls.Add(this.removeAnimationsButton);
             this.otherActionsTabPage.Controls.Add(this.resaveAllFBXAsAnimsButton);
             this.otherActionsTabPage.Controls.Add(this.templateBR2OverwriteLabel);
@@ -2598,7 +2656,7 @@ namespace NexusBuddy
             this.exportNA2Button.TabIndex = 36;
             this.exportNA2Button.Text = "Export Animation to NA2";
             this.exportNA2Button.UseVisualStyleBackColor = true;
-            this.exportNA2Button.Click += new System.EventHandler(this.exportNA2ButtonClick);
+            this.exportNA2Button.Click += new System.EventHandler(this.batchExportNB2);
             // 
             // rescaleBoneNameLabel
             // 
@@ -2607,7 +2665,7 @@ namespace NexusBuddy
             this.rescaleBoneNameLabel.Name = "rescaleBoneNameLabel";
             this.rescaleBoneNameLabel.Size = new System.Drawing.Size(82, 16);
             this.rescaleBoneNameLabel.TabIndex = 35;
-            this.rescaleBoneNameLabel.Text = "Parent Bone";
+            this.rescaleBoneNameLabel.Text = "Target Bone";
             // 
             // rescaleNamedBoneButton
             // 
@@ -2618,6 +2676,16 @@ namespace NexusBuddy
             this.rescaleNamedBoneButton.Text = "Add Scaled FX Bone and Save";
             this.rescaleNamedBoneButton.UseVisualStyleBackColor = true;
             this.rescaleNamedBoneButton.Click += new System.EventHandler(this.rescaleNamedBoneButtonClick);
+            // 
+            // removeNamedBoneButton
+            // 
+            this.removeNamedBoneButton.Location = new System.Drawing.Point(262, 412);
+            this.removeNamedBoneButton.Name = "removeNamedBoneButton";
+            this.removeNamedBoneButton.Size = new System.Drawing.Size(213, 38);
+            this.removeNamedBoneButton.TabIndex = 34;
+            this.removeNamedBoneButton.Text = "Remove Bone";
+            this.removeNamedBoneButton.UseVisualStyleBackColor = true;
+            this.removeNamedBoneButton.Click += new System.EventHandler(this.removeNamedBoneButtonClick);
             // 
             // bonesComboBox
             // 
@@ -2671,6 +2739,17 @@ namespace NexusBuddy
             this.cleanFTSXMLButton.Text = "Reorder FTSXML Triggers";
             this.cleanFTSXMLButton.UseVisualStyleBackColor = true;
             this.cleanFTSXMLButton.Click += new System.EventHandler(this.cleanFTSXMLButtonClick);
+      
+
+            this.exportBR2Button.Location = new System.Drawing.Point(262, 228);
+            this.exportBR2Button.Name = "exportBR2Button";
+            this.exportBR2Button.Size = new System.Drawing.Size(213, 38);
+            this.exportBR2Button.TabIndex = 46;
+            this.exportBR2Button.Text = "Export BR2 (Current Model)";
+            this.exportBR2Button.UseVisualStyleBackColor = true;
+            this.exportBR2Button.Click += new System.EventHandler(this.exportBR2ButtonClick);
+
+
             // 
             // removeAnimationsButton
             // 

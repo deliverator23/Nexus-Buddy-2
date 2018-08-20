@@ -175,6 +175,11 @@ namespace NexusBuddy.GrannyWrappers
             return ((IntPtr)m_info + 72);
         }
 
+        public void setTrackGroupsPtr(int num)
+        {
+            *(int*)((IntPtr)m_info + 72) = num;
+        }
+
         public int getNumAnimations()
         {
             return *(int*)((IntPtr)m_info + 76);
@@ -241,8 +246,6 @@ namespace NexusBuddy.GrannyWrappers
             return ((IntPtr)m_info + 48);
         }
 
-
-
         public void addSkeletonPointer(int skeletonPtr) {
 
             int oldNumSkeletons = getNumSkeletons();
@@ -277,7 +280,6 @@ namespace NexusBuddy.GrannyWrappers
 
         public void addTriTopologiesPointer(int skeletonPtr)
         {
-
             int oldNumTriTopologies = getNumTriTopologies();
             int newNumTriTopologies = oldNumTriTopologies + 1;
 
@@ -290,6 +292,22 @@ namespace NexusBuddy.GrannyWrappers
             *(int*)(newTriTopologiesPtr + oldNumTriTopologies * 4) = skeletonPtr;
 
             setNumTriTopologies(newNumTriTopologies);
+        }
+        
+        public void addTrackGroupsPointer(int skeletonPtr)
+        {
+            int oldNumTrackGroups = getNumTrackGroups();
+            int newNumTrackGroups = oldNumTrackGroups + 1;
+
+            int oldTrackGroupsPtr = *(int*)getTrackGroupsPtr();
+            *(int*)(getTrackGroupsPtr()) = (int)Marshal.AllocHGlobal(newNumTrackGroups * 4);
+            int newTrackGroupsPtr = *(int*)getTrackGroupsPtr();
+
+            MemoryUtil.MemCpy((void*)newTrackGroupsPtr, (void*)oldTrackGroupsPtr, (uint)oldNumTrackGroups * 4);
+
+            *(int*)(newTrackGroupsPtr + oldNumTrackGroups * 4) = skeletonPtr;
+
+            setNumTrackGroups(newNumTrackGroups);
         }
     }
 }

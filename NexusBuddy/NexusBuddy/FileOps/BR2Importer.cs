@@ -8,6 +8,8 @@ using NexusBuddy.GrannyInfos;
 using NexusBuddy.Utils;
 using Firaxis.Framework.Granny;
 using System.Runtime.InteropServices;
+using System.Globalization;
+using System.Text;
 
 namespace NexusBuddy.FileOps
 {
@@ -570,6 +572,189 @@ namespace NexusBuddy.FileOps
 
                 meshInfo.boneBindings = boneBindingNames;
             }
+        }
+
+        public static void br2Export(IGrannyFile grannyFile, int currentModelIndex)
+        {
+            string fileExtension = ".br2";
+            string outputFilename = "";
+            string numberFormat = "f8";
+
+            if (grannyFile.Models.Count > 1)
+            {
+                outputFilename = grannyFile.Filename.Replace(".gr2", "_model" + currentModelIndex + fileExtension);
+                outputFilename = outputFilename.Replace(".GR2", "_model" + currentModelIndex + fileExtension);
+            }
+            else
+            {
+                outputFilename = grannyFile.Filename.Replace(".gr2", fileExtension);
+                outputFilename = outputFilename.Replace(".GR2", fileExtension);
+            }
+
+            StreamWriter outputWriter = new StreamWriter(new FileStream(outputFilename, FileMode.Create));
+
+            IGrannyModel model = grannyFile.Models[currentModelIndex];
+            IGrannySkeleton skeleton = model.Skeleton;
+
+            // Lookup so we can identify the meshes belonging the current model in the list of file meshes
+            Dictionary<int, int> meshBindingToMesh = new Dictionary<int, int>();
+            HashSet<string> distinctMeshNames = new HashSet<string>();
+            for (int i = 0; i < model.MeshBindings.Count; i++)
+            {
+                for (int j = 0; j < grannyFile.Meshes.Count; j++)
+                {
+                    GrannyMeshWrapper modelMesh = new GrannyMeshWrapper(model.MeshBindings[i]);
+                    IGrannyMesh fileMesh = grannyFile.Meshes[j];
+                    if (modelMesh.meshEqual(fileMesh))
+                    {
+                        meshBindingToMesh.Add(i, j);
+                    }
+                }
+                distinctMeshNames.Add(model.MeshBindings[i].Name);
+            }
+
+            // Used to give meshes distinct names where we have multiple meshes with the same name in our source gr2
+            Dictionary<string, int> meshNameCount = new Dictionary<string, int>();
+            foreach (string meshName in distinctMeshNames)
+            {
+                meshNameCount.Add(meshName, 0);
+            }
+
+            List<GrannyMeshInfo> grannyMeshInfos = new List<GrannyMeshInfo>();
+            for (int i = 0; i < model.MeshBindings.Count; i++)
+            {
+                GrannyMeshWrapper meshWrapper = new GrannyMeshWrapper(model.MeshBindings[i]);
+                grannyMeshInfos.Add(meshWrapper.getMeshInfo());
+            }
+
+            BiLookup<int, string> boneLookup = new BiLookup<int, string>();
+            for (int i = 0; i < skeleton.Bones.Count; i++)
+            {
+                boneLookup.Add(i, skeleton.Bones[i].Name);
+            }
+
+            Dictionary<string, double[]> boneNameToPositionMap = new Dictionary<string, double[]>();
+            foreach (IGrannyBone bone in skeleton.Bones)
+            {
+                double[] bonePosition = NB2Exporter.getBoneWorldPosition(bone);
+                boneNameToPositionMap.Add(bone.Name, bonePosition);
+
+                //MemoryUtil.memLogLine("boneName: " + bone.Name + " bone position:" + bonePosition[0] + " " + bonePosition[1] + " " + bonePosition[2]);
+            }
+
+            outputWriter.WriteLine("// Nexus Buddy BR2 - Exported from Nexus Buddy 2");
+            outputWriter.WriteLine("skeleton");
+
+            // Write Bones
+            //outputWriter.WriteLine("Bones: " + skeleton.Bones.Count);
+            for (int boneIndex = 0; boneIndex < skeleton.Bones.Count; boneIndex++)
+            {
+                IGrannyBone bone = skeleton.Bones[boneIndex];
+                string boneName = bone.Name;
+                IGrannyTransform transform = bone.LocalTransform;
+                float[] orientation = transform.Orientation;
+                float[] position = transform.Position;
+                float[] invWorldTransform = bone.InverseWorldTransform;
+
+                StringBuilder boneStringBuilder = new StringBuilder(boneIndex + " \"" + boneName + "\" " + bone.ParentIndex + " " + position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                                orientation[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + orientation[3].ToString(numberFormat, CultureInfo.InvariantCulture));
+
+                foreach (float j in invWorldTransform)
+                {
+                    boneStringBuilder.Append(" " + j.ToString(numberFormat, CultureInfo.InvariantCulture));
+                }
+                       
+                outputWriter.WriteLine(boneStringBuilder);
+            }
+
+            // Write Meshes
+            outputWriter.WriteLine("meshes: " + model.MeshBindings.Count);
+            for (int mi = 0; mi < grannyMeshInfos.Count; mi++)
+            {
+
+                GrannyMeshInfo grannyMeshInfo = grannyMeshInfos[mi];
+                string meshName = model.MeshBindings[mi].Name;
+
+                meshNameCount[meshName]++;
+                if (meshNameCount[meshName] > 1)
+                {
+                    meshName += meshNameCount[meshName];
+                }
+                //StringBuilder boneStringBuilder = new StringBuilder();
+
+
+                outputWriter.WriteLine("mesh:\"" + meshName + "\"");
+
+                // Write Vertices
+                outputWriter.WriteLine("vertices");
+                for (int vi = 0; vi < grannyMeshInfo.vertices.Count; vi++)
+                {
+                    GrannyVertexInfo vertex = grannyMeshInfo.vertices[vi];
+
+                    string boneName0 = grannyMeshInfo.boneBindings[vertex.boneIndices[0]];
+                    float boneWeight0 = (float)vertex.boneWeights[0] / 255;
+                    int boneId0 = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneName0, boneWeight0, vertex.position);
+
+                    string boneName1 = grannyMeshInfo.boneBindings[vertex.boneIndices[1]];
+                    float boneWeight1 = (float)vertex.boneWeights[1] / 255;
+                    int boneId1 = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneName1, boneWeight1, vertex.position);
+
+                    string boneName2 = grannyMeshInfo.boneBindings[vertex.boneIndices[2]];
+                    float boneWeight2 = (float)vertex.boneWeights[2] / 255;
+                    int boneId2 = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneName2, boneWeight2, vertex.position);
+
+                    string boneName3 = grannyMeshInfo.boneBindings[vertex.boneIndices[3]];
+                    float boneWeight3 = (float)vertex.boneWeights[3] / 255;
+                    int boneId3 = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneName3, boneWeight3, vertex.position);
+
+                    float[] tangents = new float[3];
+                    if (vertex.tangent == null)
+                    {
+                        tangents[0] = vertex.normal[0];
+                        tangents[1] = vertex.normal[1];
+                        tangents[2] = vertex.normal[2];
+                    } else
+                    {
+                        tangents[0] = vertex.tangent[0];
+                        tangents[1] = vertex.tangent[1];
+                        tangents[2] = vertex.tangent[2];
+                    }
+
+                    float[] binormals = new float[3];
+                    if (vertex.binormal == null)
+                    {
+                        binormals[0] = vertex.normal[0];
+                        binormals[1] = vertex.normal[1];
+                        binormals[2] = vertex.normal[2];
+                    }
+                    else
+                    {
+                        binormals[0] = vertex.binormal[0];
+                        binormals[1] = vertex.binormal[1];
+                        binormals[2] = vertex.binormal[2];
+                    }
+
+                    outputWriter.WriteLine(vertex.position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                           vertex.normal[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                           vertex.uv[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.uv[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " "
+                                           + boneId0 + " " + boneId1 + " " + boneId2 + " " + boneId3 + " "
+                                           + vertex.boneWeights[0] + " " + vertex.boneWeights[1] + " " + vertex.boneWeights[2] + " " + vertex.boneWeights[3] + " "
+                                           + tangents[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " 
+                                           + binormals[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[2].ToString(numberFormat, CultureInfo.InvariantCulture) 
+                                           );
+                }
+                
+                // Write Triangles
+                outputWriter.WriteLine("triangles");
+                for (int ti = 0; ti < grannyMeshInfo.triangles.Count; ti++)
+                {
+                    int[] triangle = grannyMeshInfo.triangles[ti];
+                    outputWriter.WriteLine(triangle[0] + " " + triangle[1] + " " + triangle[2]);
+                }
+            }
+            outputWriter.WriteLine("end");
+
+            outputWriter.Close();
         }
     }
 }

@@ -7,7 +7,7 @@ namespace NexusBuddy
 	internal class IndieUnitSkinnedShader : IndieMaterial
 	{
 		[Category("Skinned Unit Materials"), DisplayName("BaseTextureMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string BaseTextureMap
+		public override string BaseTextureMap
 		{
 			get
 			{
@@ -80,6 +80,7 @@ namespace NexusBuddy
 		}
 		public IndieUnitSkinnedShader(IGrannyMaterial material) : base(material)
 		{
+            int z = 1;
 		}
 		public void CopyTextures(string outputFolder)
 		{

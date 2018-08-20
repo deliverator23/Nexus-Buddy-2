@@ -7,9 +7,13 @@ namespace NexusBuddy
 		[STAThread]
 		private static void Main()
 		{
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new NexusBuddyApplicationForm());
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new NexusBuddyApplicationForm());
+            }
+            catch (Exception e) { }
 		}
 	}
 }

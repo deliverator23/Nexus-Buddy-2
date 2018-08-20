@@ -6,8 +6,8 @@ namespace NexusBuddy
 {
 	internal class IndieBuildingShader : IndieMaterial
 	{
-		[Category("Building Materials"), DisplayName(" Diffuse"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string Diffuse
+		[Category("Building Materials"), DisplayName("Diffuse"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
+		public override string Diffuse
 		{
 			get
 			{
@@ -31,7 +31,7 @@ namespace NexusBuddy
 			}
 		}
 		[Category("Building Materials"), DisplayName("BuildingSREF"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string BuildingSREF
+		public override string BuildingSREF
 		{
 			get
 			{

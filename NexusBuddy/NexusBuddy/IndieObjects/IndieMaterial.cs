@@ -35,7 +35,70 @@ namespace NexusBuddy
 		{
 			return this.material;
 		}
-		protected void CopyTextureIfExists(string file, string outputFolder)
+
+        public virtual string SpecTextureMap
+        {
+            get
+            {
+                return "SpecTextureMap";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+
+        public virtual string BuildingSREF
+        {
+            get
+            {
+                return "BuildingSREF";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+
+        public virtual string Diffuse
+        {
+            get
+            {
+                return "Diffuse";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+        public virtual string BaseTextureMap
+        {
+            get
+            {
+                return "BaseTextureMap";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+        public virtual string SREFMap
+        {
+            get
+            {
+                return "SREFMap";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+        protected void CopyTextureIfExists(string file, string outputFolder)
 		{
 			if (string.IsNullOrEmpty(file))
 			{
