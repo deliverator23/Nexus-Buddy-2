@@ -23,7 +23,7 @@ namespace NexusBuddy.FileOps
             
             string directory = Path.GetDirectoryName(unitListFile);
 
-            string regexString = "(.*);(.*);(.*)";
+            string regexString = "(.*);(.*);(.*);(.*)";
 
             while (!streamReader.EndOfStream)
             {
@@ -266,7 +266,7 @@ namespace NexusBuddy.FileOps
                     IndieMaterial shader = (IndieMaterial)materialListItem.Tag;
                     GrannyMaterialWrapper matWrap1 = new GrannyMaterialWrapper(shader.GetMaterial());
                     GrannyMaterialWrapper matWrap2 = new GrannyMaterialWrapper(material);
-                    if (matWrap1.getName().Equals(matWrap2.getName()))
+                    if (matWrap1.getName().Equals(matWrap2.getName()) && !modelMaterials.Contains(shader))
                     {
                         modelMaterials.Add(shader);
                     }

@@ -101,6 +101,7 @@
     <Compile Include="NexusBuddy\GrannyInfos\GrannySkeletonInfo.cs" />
     <Compile Include="NexusBuddy\GrannyInfos\GrannyTransformInfo.cs" />
     <Compile Include="NexusBuddy\GrannyWrappers\GrannyMaterialWrapper.cs" />
+    <Compile Include="NexusBuddy\Shaders\IndieFXShader.cs" />
     <Compile Include="NexusBuddy\Shaders\IndieLeaderTransparentMatte.cs" />
     <Compile Include="NexusBuddy\Structs\DummyGrannyAnimation.cs" />
     <Compile Include="NexusBuddy\Structs\DummyGrannyBone.cs" />
@@ -145,6 +146,7 @@
     </Compile>
     <Compile Include="NexusBuddy\Program.cs" />
     <Compile Include="NexusBuddy\Shaders\ShaderUtils.cs" />
+    <Compile Include="NexusBuddy\Structs\FGrFGXParamSetInfoV0.cs" />
     <Compile Include="NexusBuddy\Utils\BiLookup.cs" />
     <Compile Include="NexusBuddy\Utils\MemoryUtil.cs" />
     <Compile Include="NexusBuddy\Utils\NumberUtils.cs" />

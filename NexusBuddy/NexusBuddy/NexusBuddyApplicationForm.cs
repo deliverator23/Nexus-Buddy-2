@@ -18,6 +18,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Media3D;
+using System.Runtime.InteropServices;
 
 namespace NexusBuddy
 { 
@@ -25,7 +26,8 @@ namespace NexusBuddy
     public class NexusBuddyApplicationForm : Form
 	{
 		public static NexusBuddyApplicationForm form;
-		public static IGrannyFile loadedFile;
+        private static StreamWriter logFileWriter;
+        public static IGrannyFile loadedFile;
         public static int major_version = 2;
         public static int minor_version = 5;
         public static int sub_minor_version = 0;
@@ -279,31 +281,55 @@ namespace NexusBuddy
 			this.meshList.Items[this.meshList.Items.Count - 1].Tag = grannyMesh;
 		}
 
+        private void log(string messageLine)
+        {
+            logFileWriter = new StreamWriter(new FileStream("nexusbuddy.log", FileMode.Append));
+            logFileWriter.WriteLine(messageLine);
+            logFileWriter.Close();
+        }
+
+        private unsafe string GetParameterName(IGrannyMaterial material, string parameterSetString, int index)
+        {
+            Type myType = material.FindParameterSet(parameterSetString).GetType();
+            FieldInfo fm_pvReferencePtr = myType.GetField("m_pvReferencePtr", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            Pointer pm_pvReferencePtr = (Pointer)fm_pvReferencePtr.GetValue(material.FindParameterSet(parameterSetString));
+
+            FGrFGXParamSetInfoV0** m_pvReferencePtr = (FGrFGXParamSetInfoV0**)Pointer.Unbox(pm_pvReferencePtr);
+
+            // Access Param Count Directly
+            //int pcount = *(int*)(*(int*)m_pvReferencePtr + 4);
+            //int mcount = material.FindParameterSet(parameterSetString).ParamCount;
+
+            // Access Param Name Directly
+            sbyte* spointer = (sbyte*)*(int*)(*(int*)(*(int*)m_pvReferencePtr + 12) + index * 4);
+            IntPtr sIntPtr = new IntPtr((void*)spointer);
+            String parameterName = Marshal.PtrToStringAnsi(sIntPtr);
+
+            return parameterName;
+        }
+
         private void AddMaterialToListbox(IGrannyMaterial mat)
 		{
 			string shaderSet;
 			if ((shaderSet = mat.ShaderSet) != null)
 			{
-                //if (this.enableLoggingBox.Checked)
-                //{
-                //    log("Material name: " + mat.Name);
-                //    log("Shader set: " + shaderSet);
-                //    for (int i = 0; i < mat.GetParameterSetCount(); i++)
-                //    {
-                //        log("Parameter set " + i + ": " + mat.GetParameterSet(i).ParamBlock);
-                //        for (int j = 0; j < mat.GetParameterSet(i).ParamCount; j++)
-                //        {
-                //            log("  Param Name: " + GetParameterName(mat, mat.GetParameterSet(i).ParamBlock, j));
-                //            log("  Param Type: " + mat.GetParameterSet(i).GetParameterType(j));
-                //            if (!shaderSet.Equals("SimpleShader"))
-                //            {
-                //                log("  Param Value: " + mat.GetParameterSet(i).GetParameterValue(j));
-                //            }
-                //        }
-                //    }
-                //    log("");
-                //}
-
+                    //log("Material name: " + mat.Name);
+                    //log("Shader set: " + shaderSet);
+                    //for (int i = 0; i < mat.GetParameterSetCount(); i++)
+                    //{
+                        //log("Parameter set " + i + ": " + mat.GetParameterSet(i).ParamBlock);
+                        //for (int j = 0; j < mat.GetParameterSet(i).ParamCount; j++)
+                        //{
+                            //log("  Param Name: " + GetParameterName(mat, mat.GetParameterSet(i).ParamBlock, j));
+                            //log("  Param Type: " + mat.GetParameterSet(i).GetParameterType(j));
+                            //if (!shaderSet.Equals("SimpleShader"))
+                            //{
+                            //    log("  Param Value: " + mat.GetParameterSet(i).GetParameterValue(j));
+                            //}
+                        //}
+                    //}
+                    //log("");
+                
                 usedShaderSet.Add(shaderSet);
 
                 if (shaderSet == "SimpleShader")
@@ -312,8 +338,15 @@ namespace NexusBuddy
                     indieSimpleShader.AddToListView(this.materialList);
                     return;
                 }
-				if (shaderSet == "BuildingShader")
-				{
+                if (shaderSet == "FXShader_Skinned")
+                {
+                    IndieFXShader indieFXShader = new IndieFXShader(mat);
+                    indieFXShader.AddToListView(this.materialList);
+                    return;
+                }
+                if (shaderSet == "BuildingShader" || shaderSet == "BuildingShader_Skinned")
+
+                {
 					IndieBuildingShader indieBuildingShader = new IndieBuildingShader(mat);
 					indieBuildingShader.AddToListView(this.materialList);
 					return;
