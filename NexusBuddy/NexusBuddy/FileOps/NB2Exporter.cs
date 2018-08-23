@@ -193,8 +193,9 @@ namespace NexusBuddy.FileOps
 
             if (grannyFile.Models.Count > 1)
             {
-                outputFilename = grannyFile.Filename.Replace(".gr2", "_model" + modelId + fileExtension);
-                outputFilename = outputFilename.Replace(".GR2", "_model" + modelId + fileExtension);
+                string modelFilename = "__" + grannyFile.Models[modelId].Name + fileExtension;
+                outputFilename = grannyFile.Filename.Replace(".gr2", modelFilename);
+                outputFilename = outputFilename.Replace(".GR2", modelFilename);
             }
             else
             {
