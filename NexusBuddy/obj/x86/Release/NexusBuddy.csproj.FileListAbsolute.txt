@@ -99,4 +99,3 @@ D:\mod\gitprojects\Nexus-Buddy-2\NexusBuddy\obj\x86\Release\NexusBuddy.csproj.Co
 D:\mod\gitprojects\Nexus-Buddy-2\NexusBuddy\obj\x86\Release\NexusBuddy.csproj.CopyComplete
 D:\mod\gitprojects\Nexus-Buddy-2\NexusBuddy\obj\x86\Release\NexusBuddy2.exe
 D:\mod\gitprojects\Nexus-Buddy-2\NexusBuddy\obj\x86\Release\NexusBuddy2.pdb
-D:\mod\gitprojects\Nexus-Buddy-2\NexusBuddy\obj\x86\Release\NexusBuddy.csprojAssemblyReference.cache

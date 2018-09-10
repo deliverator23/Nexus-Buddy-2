@@ -90,6 +90,8 @@ namespace NexusBuddy
         private Button saveButton;
         private Button saveAsButton;
         private Button saveAnimationButton;
+        private Button exportCN6Button;
+        private Button batchExportButton;
         private ListViewWithComboBox meshList;
         private ColumnHeader MeshName;
         private ColumnHeader Material;
@@ -311,6 +313,7 @@ namespace NexusBuddy
         private void AddMaterialToListbox(IGrannyMaterial mat)
 		{
 			string shaderSet;
+            try { 
 			if ((shaderSet = mat.ShaderSet) != null)
 			{
                     //log("Material name: " + mat.Name);
@@ -435,7 +438,7 @@ namespace NexusBuddy
                     indieLeaderTransparentMatteShader.AddToListView(this.materialList);
                     return;
                 }
-                if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader")
+                if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader" || shaderSet == "UnitShader_SkinnedAlpha")
 				{
 					IndieUnitSkinnedShader indieUnitSkinnedShader = new IndieUnitSkinnedShader(mat);
 					indieUnitSkinnedShader.AddToListView(this.materialList);
@@ -454,7 +457,10 @@ namespace NexusBuddy
 				IndieLandmarkStencilShader indieLandmarkStencilShader2 = new IndieLandmarkStencilShader(mat);
 				indieLandmarkStencilShader2.AddToListView(this.materialList);
 			}
-		}
+            } catch (InvalidCastException e)
+            {
+            }
+        }
 
         private void refreshAppDataWithMessage(string message)
         {
@@ -685,7 +691,7 @@ namespace NexusBuddy
             refreshAppDataWithMessage("RESCALE BONE ADDED.");
         }
 
-        private unsafe void batchExportNB2(object sender, EventArgs e)
+        private unsafe void batchExport(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "dat files (*.dat) | *.dat";
@@ -694,7 +700,7 @@ namespace NexusBuddy
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 GrannyContext grannyContext = Context.Get<GrannyContext>();
-                NB2Exporter.batchExport(grannyContext, openFileDialog.FileName);
+                CN6FileOps.batchExport(grannyContext, openFileDialog.FileName);
 
                 refreshAppDataWithMessage("Batch export complete!");
             }
@@ -995,7 +1001,7 @@ namespace NexusBuddy
             saveAsAction(NexusBuddyApplicationForm.loadedFile, filename, true);      
         }
 
-        public void saveAsAction(IGrannyFile fileToSave, string fileName, bool updateAppDataAndSaveMessage)
+        public IGrannyFile saveAsAction(IGrannyFile fileToSave, string fileName, bool updateAppDataAndSaveMessage)
         {
             GrannyFileWrapper fileWrapper = new GrannyFileWrapper(fileToSave);
             setExporterInfo(fileWrapper);
@@ -1008,7 +1014,7 @@ namespace NexusBuddy
             {
                 File.Delete(fileName);
             }
-            System.IO.File.Move(tempStagingFileName, fileName);
+            File.Move(tempStagingFileName, fileName);
             fileToSave.Filename = fileName;
 
             this.openTempFiles.Clear();
@@ -1025,13 +1031,15 @@ namespace NexusBuddy
             savedFile.Filename = fileName;
             savedFile.Source = "Tool";
 
-            NexusBuddyApplicationForm.loadedFile = savedFile;
+            loadedFile = savedFile;
             modelList.Items.Clear();
 
             if (updateAppDataAndSaveMessage)
             {
                 refreshAppDataWithMessage("FILE SAVED.");
             }
+
+            return loadedFile;
         }
 
         private string getShortFilenameForLoadedFile()
@@ -1586,7 +1594,19 @@ namespace NexusBuddy
 			}
 			return text;
 		}
-       
+
+        private void exportCN6ButtonClick(object sender, EventArgs e)
+        {
+            if (NexusBuddyApplicationForm.loadedFile == null)
+            {
+                MessageBox.Show("You need to open a file before you can export to CN6!", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                return;
+            }
+
+            CN6FileOps.exportAllModelsToCN6(loadedFile);
+     
+            refreshAppDataWithMessage("EXPORT TO CN6 COMPLETE.");
+        }
 
         private void exportNB2ButtonClick(object sender, EventArgs e)
         {
@@ -2119,6 +2139,8 @@ namespace NexusBuddy
             this.exportNB2CurrentModelButton = new System.Windows.Forms.Button();
             this.overwriteMeshesButton = new System.Windows.Forms.Button();
             this.exportNB2Button = new System.Windows.Forms.Button();
+            this.batchExportButton = new System.Windows.Forms.Button();
+            this.exportCN6Button = new System.Windows.Forms.Button();
             this.selectModelTabPage = new System.Windows.Forms.TabPage();
             this.modelList = new System.Windows.Forms.ListView();
             this.modelName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -2580,6 +2602,8 @@ namespace NexusBuddy
             this.otherActionsTabPage.Controls.Add(this.exportNB2CurrentModelButton);
             this.otherActionsTabPage.Controls.Add(this.overwriteMeshesButton);
             this.otherActionsTabPage.Controls.Add(this.exportNB2Button);
+            this.otherActionsTabPage.Controls.Add(this.exportCN6Button);
+            this.otherActionsTabPage.Controls.Add(this.batchExportButton);
             this.otherActionsTabPage.Location = new System.Drawing.Point(4, 25);
             this.otherActionsTabPage.Name = "otherActionsTabPage";
             this.otherActionsTabPage.Padding = new System.Windows.Forms.Padding(3);
@@ -2689,7 +2713,7 @@ namespace NexusBuddy
             this.exportNA2Button.TabIndex = 36;
             this.exportNA2Button.Text = "Export Animation to NA2";
             this.exportNA2Button.UseVisualStyleBackColor = true;
-            this.exportNA2Button.Click += new System.EventHandler(this.batchExportNB2);
+            this.exportNA2Button.Click += new System.EventHandler(this.batchExport);
             // 
             // rescaleBoneNameLabel
             // 
@@ -2896,7 +2920,24 @@ namespace NexusBuddy
             this.exportNB2Button.TabIndex = 11;
             this.exportNB2Button.Text = "Export to NB2 (All Models)";
             this.exportNB2Button.UseVisualStyleBackColor = true;
-            this.exportNB2Button.Click += new System.EventHandler(this.exportNB2ButtonClick);
+            this.exportNB2Button.Click += new EventHandler(exportNB2ButtonClick);
+
+            this.exportCN6Button.Location = new System.Drawing.Point(6, 480);
+            this.exportCN6Button.Name = "exportCN6Button";
+            this.exportCN6Button.Size = new System.Drawing.Size(150, 30);
+            this.exportCN6Button.TabIndex = 11;
+            this.exportCN6Button.Text = "Export to CN6";
+            this.exportCN6Button.UseVisualStyleBackColor = true;
+            this.exportCN6Button.Click += new EventHandler(exportCN6ButtonClick);
+
+            this.batchExportButton.Location = new System.Drawing.Point(6, 512);
+            this.batchExportButton.Name = "batchExportButton";
+            this.batchExportButton.Size = new System.Drawing.Size(150, 30);
+            this.batchExportButton.TabIndex = 11;
+            this.batchExportButton.Text = "Batch Export";
+            this.batchExportButton.UseVisualStyleBackColor = true;
+            this.batchExportButton.Click += new EventHandler(batchExport);
+
             // 
             // selectModelTabPage
             // 

@@ -222,6 +222,24 @@ namespace NexusBuddy.GrannyWrappers
                     currentVertex.normal[2] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 2));
                 }
 
+                structInfo = meshInfo.getVertexStructInfoByName("Binormal");
+                if (structInfo != null)
+                {
+                    currentVertex.binormal = new float[3];
+                    currentVertex.binormal[0] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 0));
+                    currentVertex.binormal[1] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 1));
+                    currentVertex.binormal[2] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 2));
+                }
+
+                structInfo = meshInfo.getVertexStructInfoByName("Tangent");
+                if (structInfo != null)
+                {
+                    currentVertex.tangent = new float[3];
+                    currentVertex.tangent[0] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 0));
+                    currentVertex.tangent[1] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 1));
+                    currentVertex.tangent[2] = (float)structInfo.convert(*(int*)(vertexPtr) + (i * vertexSize) + structInfo.offset + (structInfo.length * 2));
+                }
+
                 structInfo = meshInfo.getVertexStructInfoByName("TextureCoordinates0");
                 if (structInfo != null)
                 {

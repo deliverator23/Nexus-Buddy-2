@@ -246,12 +246,15 @@ namespace NexusBuddy.FileOps
             }
 
             Dictionary<string, double[]> boneNameToPositionMap = new Dictionary<string, double[]>();
+            double[] bonePosition;
             foreach (IGrannyBone bone in skeleton.Bones)
             {
-                double[] bonePosition = getBoneWorldPosition(bone);
+                try { 
+                bonePosition = getBoneWorldPosition(bone);
                 boneNameToPositionMap.Add(bone.Name, bonePosition);
-
-                //MemoryUtil.memLogLine("boneName: " + bone.Name + " bone position:" + bonePosition[0] + " " + bonePosition[1] + " " + bonePosition[2]);
+                } catch (ArgumentException)
+                {
+                }
             }
 
             outputWriter.WriteLine("// Nexus Buddy NB2 - Exported from Nexus Buddy 2");
