@@ -462,6 +462,100 @@ namespace NexusBuddy
             }
         }
 
+        public static IndieMaterial GetIndieMaterialFromMaterial(IGrannyMaterial mat)
+        {
+            string shaderSet;
+            try
+            {
+                if ((shaderSet = mat.ShaderSet) != null)
+                {
+                    if (shaderSet == "SimpleShader")
+                    {
+                        return new IndieSimpleShader(mat);
+                    }
+                    if (shaderSet == "FXShader_Skinned")
+                    {
+                        return new IndieFXShader(mat);
+                    }
+                    if (shaderSet == "BuildingShader" || shaderSet == "BuildingShader_Skinned")
+                    {
+                        return new IndieBuildingShader(mat);
+                    }
+                    if (shaderSet == "Leader")
+                    {
+                        return new IndieLeaderShader(mat);
+                    }
+                    if (shaderSet == "Leader_Opaque_Cloth")
+                    {
+                        return new IndieLeaderOpaqueClothShader(mat);
+                    }
+                    if (shaderSet == "Leader_Skin")
+                    {
+                        return new IndieLeaderSkinShader(mat);
+                    }
+                    if (shaderSet == "Leader_Fur")
+                    {
+                        return new IndieLeaderFurShader(mat);
+                    }
+                    if (shaderSet == "Leader_Transparency")
+                    {
+                        return new IndieLeaderTransparencyShader(mat);
+                    }
+                    if (shaderSet == "Leader_Hair")
+                    {
+                        return new IndieLeaderHairShader(mat);
+                    }
+                    if (shaderSet == "Leader_Opaque_Hair")
+                    {
+                        return new IndieLeaderOpaqueHairShader(mat);
+                    }
+                    if (shaderSet == "Leader_Glass")
+                    {
+                        return new IndieLeaderGlassShader(mat);
+                    }
+                    if (shaderSet == "Leader_Fur_Fin")
+                    {
+                        return new IndieLeaderFurFinShader(mat);
+                    }
+                    if (shaderSet == "Leader_Velvet")
+                    {
+                        return new IndieLeaderVelvetShader(mat);
+                    }
+                    if (shaderSet == "Leader_Masked")
+                    {
+                        return new IndieLeaderMaskedShader(mat);
+                    }
+                    if (shaderSet == "Leader_Masked_Hair")
+                    {
+                        return new IndieLeaderMaskedHairShader(mat);
+                    }
+                    if (shaderSet == "Leader_Opaque_Matte")
+                    {
+                        return new IndieLeaderOpaqueMatteShader(mat);
+                    }
+                    if (shaderSet == "Leader_Transparent_Matte")
+                    {
+                        return new IndieLeaderTransparentMatteShader(mat);
+                    }
+                    if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader" || shaderSet == "UnitShader_SkinnedAlpha")
+                    {
+                        return new IndieUnitSkinnedShader(mat);
+                    }
+                    if (shaderSet == "LandmarkShader_Stencil")
+                    {
+                        return new IndieLandmarkStencilShader(mat);
+                    }
+                    if (shaderSet != "LandmarkShader")
+                    {
+                    }
+                }
+            }
+            catch (InvalidCastException e)
+            {
+            }
+            return new IndieLandmarkStencilShader(mat);
+        }
+
         private void refreshAppDataWithMessage(string message)
         {
             this.refreshAppData();
@@ -1603,7 +1697,7 @@ namespace NexusBuddy
                 return;
             }
 
-            CN6FileOps.exportAllModelsToCN6(loadedFile);
+            CN6FileOps.exportAllModelsToCN6(loadedFile, false);
      
             refreshAppDataWithMessage("EXPORT TO CN6 COMPLETE.");
         }
