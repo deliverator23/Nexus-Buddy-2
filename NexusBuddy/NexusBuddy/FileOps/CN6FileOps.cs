@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using System;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace NexusBuddy.FileOps
 {
@@ -48,6 +49,11 @@ namespace NexusBuddy.FileOps
             }
         }
 
+        public static string GetSafeFilename(string filename)
+        {
+            return string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));
+        }
+
         public static void cn6Export(IGrannyFile grannyFile, int currentModelIndex, bool isBatch)
         {
             string fileExtension = ".cn6";
@@ -70,6 +76,12 @@ namespace NexusBuddy.FileOps
             {
                 outputFilename = outputFilename.Replace(fileExtension, "_batch" + fileExtension);
             }
+
+            string directory = Path.GetDirectoryName(outputFilename);
+            string filename = Path.GetFileName(outputFilename);
+            outputFilename = directory + "\\" + GetSafeFilename(filename);
+
+            //HBWellGeothermal_03
 
             StreamWriter outputWriter = new StreamWriter(new FileStream(outputFilename, FileMode.Create));
 

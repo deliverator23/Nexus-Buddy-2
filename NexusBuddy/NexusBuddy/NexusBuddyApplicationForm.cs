@@ -341,7 +341,7 @@ namespace NexusBuddy
                     indieSimpleShader.AddToListView(this.materialList);
                     return;
                 }
-                if (shaderSet == "FXShader_Skinned")
+                if (shaderSet == "FXShader" || shaderSet == "FXShader_Skinned")
                 {
                     IndieFXShader indieFXShader = new IndieFXShader(mat);
                     indieFXShader.AddToListView(this.materialList);
@@ -473,7 +473,7 @@ namespace NexusBuddy
                     {
                         return new IndieSimpleShader(mat);
                     }
-                    if (shaderSet == "FXShader_Skinned")
+                    if (shaderSet == "FXShader" || shaderSet == "FXShader_Skinned")
                     {
                         return new IndieFXShader(mat);
                     }
