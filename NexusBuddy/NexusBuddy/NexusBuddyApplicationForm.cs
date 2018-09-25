@@ -310,154 +310,162 @@ namespace NexusBuddy
             return parameterName;
         }
 
-        private void AddMaterialToListbox(IGrannyMaterial mat)
-		{
-			string shaderSet;
-            try { 
-			if ((shaderSet = mat.ShaderSet) != null)
-			{
+        private unsafe void AddMaterialToListbox(IGrannyMaterial mat)
+        {
+            string shaderSet;
+
+            try
+            {
+                GrannyMaterialWrapper materialWrapper = new GrannyMaterialWrapper(mat);
+                //int i = *(int*)*(int*)materialWrapper.get16Ptr();
+                //int i2 = *(int*)*(int*)materialWrapper.getExtendedDataPtr();
+                shaderSet = materialWrapper.getShaderSetName();
+
+                if (shaderSet != null)
+                {
                     //log("Material name: " + mat.Name);
                     //log("Shader set: " + shaderSet);
                     //for (int i = 0; i < mat.GetParameterSetCount(); i++)
                     //{
-                        //log("Parameter set " + i + ": " + mat.GetParameterSet(i).ParamBlock);
-                        //for (int j = 0; j < mat.GetParameterSet(i).ParamCount; j++)
-                        //{
-                            //log("  Param Name: " + GetParameterName(mat, mat.GetParameterSet(i).ParamBlock, j));
-                            //log("  Param Type: " + mat.GetParameterSet(i).GetParameterType(j));
-                            //if (!shaderSet.Equals("SimpleShader"))
-                            //{
-                            //    log("  Param Value: " + mat.GetParameterSet(i).GetParameterValue(j));
-                            //}
-                        //}
+                    //log("Parameter set " + i + ": " + mat.GetParameterSet(i).ParamBlock);
+                    //for (int j = 0; j < mat.GetParameterSet(i).ParamCount; j++)
+                    //{
+                    //log("  Param Name: " + GetParameterName(mat, mat.GetParameterSet(i).ParamBlock, j));
+                    //log("  Param Type: " + mat.GetParameterSet(i).GetParameterType(j));
+                    //if (!shaderSet.Equals("SimpleShader"))
+                    //{
+                    //    log("  Param Value: " + mat.GetParameterSet(i).GetParameterValue(j));
+                    //}
+                    //}
                     //}
                     //log("");
-                
-                usedShaderSet.Add(shaderSet);
 
-                if (shaderSet == "SimpleShader")
-                {
-                    IndieSimpleShader indieSimpleShader = new IndieSimpleShader(mat);
-                    indieSimpleShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "FXShader" || shaderSet == "FXShader_Skinned")
-                {
-                    IndieFXShader indieFXShader = new IndieFXShader(mat);
-                    indieFXShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "BuildingShader" || shaderSet == "BuildingShader_Skinned")
+                    usedShaderSet.Add(shaderSet);
 
-                {
-					IndieBuildingShader indieBuildingShader = new IndieBuildingShader(mat);
-					indieBuildingShader.AddToListView(this.materialList);
-					return;
-				}
-                if (shaderSet == "Leader")
-                {
-                    IndieLeaderShader indieLeaderShader = new IndieLeaderShader(mat);
-                    indieLeaderShader.AddToListView(this.materialList);
-                    return;
+                    if (shaderSet == "SimpleShader")
+                    {
+                        IndieSimpleShader indieSimpleShader = new IndieSimpleShader(mat);
+                        indieSimpleShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "FXShader" || shaderSet == "FXShader_Skinned")
+                    {
+                        IndieFXShader indieFXShader = new IndieFXShader(mat);
+                        indieFXShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "BuildingShader" || shaderSet == "BuildingShader_Skinned")
+
+                    {
+                        IndieBuildingShader indieBuildingShader = new IndieBuildingShader(mat);
+                        indieBuildingShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader")
+                    {
+                        IndieLeaderShader indieLeaderShader = new IndieLeaderShader(mat);
+                        indieLeaderShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Opaque_Cloth")
+                    {
+                        IndieLeaderOpaqueClothShader indieLeaderOpaqueClothShader = new IndieLeaderOpaqueClothShader(mat);
+                        indieLeaderOpaqueClothShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Skin")
+                    {
+                        IndieLeaderSkinShader indieLeaderSkinShader = new IndieLeaderSkinShader(mat);
+                        indieLeaderSkinShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Fur")
+                    {
+                        IndieLeaderFurShader indieLeaderFurShader = new IndieLeaderFurShader(mat);
+                        indieLeaderFurShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Transparency")
+                    {
+                        IndieLeaderTransparencyShader indieLeaderTransparencyShader = new IndieLeaderTransparencyShader(mat);
+                        indieLeaderTransparencyShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Hair")
+                    {
+                        IndieLeaderHairShader indieLeaderHairShader = new IndieLeaderHairShader(mat);
+                        indieLeaderHairShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Opaque_Hair")
+                    {
+                        IndieLeaderOpaqueHairShader indieLeaderOpaqueHairShader = new IndieLeaderOpaqueHairShader(mat);
+                        indieLeaderOpaqueHairShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Glass")
+                    {
+                        IndieLeaderGlassShader indieLeaderGlassShader = new IndieLeaderGlassShader(mat);
+                        indieLeaderGlassShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Fur_Fin")
+                    {
+                        IndieLeaderFurFinShader indieLeaderFurFinShader = new IndieLeaderFurFinShader(mat);
+                        indieLeaderFurFinShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Velvet")
+                    {
+                        IndieLeaderVelvetShader indieLeaderVelvetShader = new IndieLeaderVelvetShader(mat);
+                        indieLeaderVelvetShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Masked")
+                    {
+                        IndieLeaderMaskedShader indieLeaderMaskedShader = new IndieLeaderMaskedShader(mat);
+                        indieLeaderMaskedShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Masked_Hair")
+                    {
+                        IndieLeaderMaskedHairShader indieLeaderMaskedHairShader = new IndieLeaderMaskedHairShader(mat);
+                        indieLeaderMaskedHairShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Opaque_Matte")
+                    {
+                        IndieLeaderOpaqueMatteShader indieLeaderOpaqueMatteShader = new IndieLeaderOpaqueMatteShader(mat);
+                        indieLeaderOpaqueMatteShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "Leader_Transparent_Matte")
+                    {
+                        IndieLeaderTransparentMatteShader indieLeaderTransparentMatteShader = new IndieLeaderTransparentMatteShader(mat);
+                        indieLeaderTransparentMatteShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader" || shaderSet == "UnitShader_SkinnedAlpha")
+                    {
+                        IndieUnitSkinnedShader indieUnitSkinnedShader = new IndieUnitSkinnedShader(mat);
+                        indieUnitSkinnedShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet == "LandmarkShader_Stencil")
+                    {
+                        IndieLandmarkStencilShader indieLandmarkStencilShader = new IndieLandmarkStencilShader(mat);
+                        indieLandmarkStencilShader.AddToListView(this.materialList);
+                        return;
+                    }
+                    if (shaderSet != "LandmarkShader")
+                    {
+                        return;
+                    }
+                    IndieLandmarkStencilShader indieLandmarkStencilShader2 = new IndieLandmarkStencilShader(mat);
+                    indieLandmarkStencilShader2.AddToListView(this.materialList);
                 }
-                if (shaderSet == "Leader_Opaque_Cloth")
-                {
-                    IndieLeaderOpaqueClothShader indieLeaderOpaqueClothShader = new IndieLeaderOpaqueClothShader(mat);
-                    indieLeaderOpaqueClothShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Skin")
-                {
-                    IndieLeaderSkinShader indieLeaderSkinShader = new IndieLeaderSkinShader(mat);
-                    indieLeaderSkinShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Fur")
-                {
-                    IndieLeaderFurShader indieLeaderFurShader = new IndieLeaderFurShader(mat);
-                    indieLeaderFurShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Transparency")
-                {
-                    IndieLeaderTransparencyShader indieLeaderTransparencyShader = new IndieLeaderTransparencyShader(mat);
-                    indieLeaderTransparencyShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Hair")
-                {
-                    IndieLeaderHairShader indieLeaderHairShader = new IndieLeaderHairShader(mat);
-                    indieLeaderHairShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Opaque_Hair")
-                {
-                    IndieLeaderOpaqueHairShader indieLeaderOpaqueHairShader = new IndieLeaderOpaqueHairShader(mat);
-                    indieLeaderOpaqueHairShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Glass")
-                {
-                    IndieLeaderGlassShader indieLeaderGlassShader = new IndieLeaderGlassShader(mat);
-                    indieLeaderGlassShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Fur_Fin")
-                {
-                    IndieLeaderFurFinShader indieLeaderFurFinShader = new IndieLeaderFurFinShader(mat);
-                    indieLeaderFurFinShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Velvet")
-                {
-                    IndieLeaderVelvetShader indieLeaderVelvetShader = new IndieLeaderVelvetShader(mat);
-                    indieLeaderVelvetShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Masked")
-                {
-                    IndieLeaderMaskedShader indieLeaderMaskedShader = new IndieLeaderMaskedShader(mat);
-                    indieLeaderMaskedShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Masked_Hair")
-                {
-                    IndieLeaderMaskedHairShader indieLeaderMaskedHairShader = new IndieLeaderMaskedHairShader(mat);
-                    indieLeaderMaskedHairShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Opaque_Matte")
-                {
-                    IndieLeaderOpaqueMatteShader indieLeaderOpaqueMatteShader = new IndieLeaderOpaqueMatteShader(mat);
-                    indieLeaderOpaqueMatteShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "Leader_Transparent_Matte")
-                {
-                    IndieLeaderTransparentMatteShader indieLeaderTransparentMatteShader = new IndieLeaderTransparentMatteShader(mat);
-                    indieLeaderTransparentMatteShader.AddToListView(this.materialList);
-                    return;
-                }
-                if (shaderSet == "UnitShader_Skinned" || shaderSet == "UnitShader" || shaderSet == "UnitShader_SkinnedAlpha")
-				{
-					IndieUnitSkinnedShader indieUnitSkinnedShader = new IndieUnitSkinnedShader(mat);
-					indieUnitSkinnedShader.AddToListView(this.materialList);
-					return;
-				}
-				if (shaderSet == "LandmarkShader_Stencil")
-				{
-					IndieLandmarkStencilShader indieLandmarkStencilShader = new IndieLandmarkStencilShader(mat);
-					indieLandmarkStencilShader.AddToListView(this.materialList);
-					return;
-				}
-				if (shaderSet != "LandmarkShader")
-				{
-					return;
-				}
-				IndieLandmarkStencilShader indieLandmarkStencilShader2 = new IndieLandmarkStencilShader(mat);
-				indieLandmarkStencilShader2.AddToListView(this.materialList);
-			}
-            } catch (InvalidCastException e)
+            }
+            catch (InvalidCastException e)
             {
             }
         }

@@ -21,7 +21,7 @@ namespace NexusBuddy.FileOps
 
             string directory = Path.GetDirectoryName(unitListFile);
 
-            string regexString = "(.*);(.*);(.*);(.*)";
+            string regexString = "(.+);(.*);(.*);(.*)"; 
 
             while (!streamReader.EndOfStream)
             {
@@ -51,18 +51,42 @@ namespace NexusBuddy.FileOps
 
         public static string GetSafeFilename(string filename)
         {
-            return string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));
+            return string.Join("_", filename.Split(Path.GetInvalidFileNameChars())).Replace(" ", "_");
         }
 
         public static void cn6Export(IGrannyFile grannyFile, int currentModelIndex, bool isBatch)
         {
+            IGrannyModel model = grannyFile.Models[currentModelIndex];
+
+            List<string> decalMeshNames = WriteModelToCN6(grannyFile, isBatch, model, null);
+
+            //if (model.MeshBindings.Count > 1)
+            //{
+                foreach (string decalMeshName in decalMeshNames)
+                {
+                    WriteModelToCN6(grannyFile, isBatch, model, decalMeshName);
+                }
+            //}
+        }
+
+        private static List<string> WriteModelToCN6(IGrannyFile grannyFile, bool isBatch, IGrannyModel model, string filterMeshName)
+        {
             string fileExtension = ".cn6";
             string outputFilename = "";
             string numberFormat = "f8";
+            List<string> decalMeshNames = new List<string>();
 
+            IGrannySkeleton skeleton = model.Skeleton;
+
+            string decalMeshName = "";
+            if (filterMeshName != null)
+            {
+                decalMeshName = "_DCL_" + GetSafeFilename(filterMeshName);
+            }
+            
             if (grannyFile.Models.Count > 1)
             {
-                string modelFilename = "__" + grannyFile.Models[currentModelIndex].Name + fileExtension;
+                string modelFilename = "__" + model.Name + decalMeshName + fileExtension;
                 outputFilename = grannyFile.Filename.Replace(".gr2", modelFilename);
                 outputFilename = outputFilename.Replace(".GR2", modelFilename);
             }
@@ -81,12 +105,7 @@ namespace NexusBuddy.FileOps
             string filename = Path.GetFileName(outputFilename);
             outputFilename = directory + "\\" + GetSafeFilename(filename);
 
-            //HBWellGeothermal_03
-
             StreamWriter outputWriter = new StreamWriter(new FileStream(outputFilename, FileMode.Create));
-
-            IGrannyModel model = grannyFile.Models[currentModelIndex];
-            IGrannySkeleton skeleton = model.Skeleton;
 
             // Lookup so we can identify the meshes belonging the current model in the list of file meshes
             Dictionary<int, int> meshBindingToMesh = new Dictionary<int, int>();
@@ -177,136 +196,182 @@ namespace NexusBuddy.FileOps
                 }
             }
 
-
-
-
-            // Write Meshes
-            outputWriter.WriteLine("meshes:" + model.MeshBindings.Count);
+            int meshCount = 0;
             for (int mi = 0; mi < grannyMeshInfos.Count; mi++)
             {
+                IGrannyMesh mesh = model.MeshBindings[mi];
+                string meshName = model.MeshBindings[mi].Name;
+                GrannyMeshWrapper meshWrapper = new GrannyMeshWrapper(mesh);
+                GrannyMeshInfo meshInfo = meshWrapper.getMeshInfo();
 
+                bool isFlatMesh = true;
+                foreach (GrannyVertexInfo vertexInfo in meshInfo.vertices)
+                {
+                    float zPos = vertexInfo.position[2];
+                    bool isZero = NumberUtils.almostEquals(zPos, 0.0f, 4);
+                    if (!isZero)
+                    {
+                        isFlatMesh = false;
+                        break;
+                    }
+                }
+
+                if (filterMeshName == null)
+                {
+                    if (isFlatMesh)
+                    {
+                        decalMeshNames.Add(meshName);
+                    }
+                    else
+                    {
+                        meshCount++;
+                    }
+                }
+                else
+                {
+                    meshCount = 1;
+                }
+            }
+
+            if (meshCount == 0)
+            {
+                outputWriter.Close();
+                File.Delete(outputFilename);
+                return decalMeshNames;
+            }
+
+            // Write Meshes
+            outputWriter.WriteLine("meshes:" + meshCount);
+            
+            for (int mi = 0; mi < grannyMeshInfos.Count; mi++)
+            {
                 GrannyMeshInfo grannyMeshInfo = grannyMeshInfos[mi];
                 string meshName = model.MeshBindings[mi].Name;
 
-                meshNameCount[meshName]++;
-                if (meshNameCount[meshName] > 1)
+                if ((filterMeshName == null && !decalMeshNames.Contains(meshName)) || meshName.Equals(filterMeshName))
                 {
-                    meshName += meshNameCount[meshName];
-                }
-
-                outputWriter.WriteLine("mesh:\"" + meshName + "\"");
-
-                // Write Materials
-                outputWriter.WriteLine("materials");
-                foreach (IGrannyMaterial material in model.MeshBindings[mi].MaterialBindings)
-                {
-                    IndieMaterial shader = NexusBuddyApplicationForm.GetIndieMaterialFromMaterial(material);
-
-                    string baseMap;
-
-                    if (shader.GetType() == typeof(IndieBuildingShader))
+                    meshNameCount[meshName]++;
+                    if (meshNameCount[meshName] > 1)
                     {
-                        baseMap = shader.Diffuse;
-
-                    }
-                    else if (shader.GetType() == typeof(IndieLandmarkStencilShader))
-                    {
-                        baseMap = shader.BaseTextureMap;
-
-                    }
-                    else
-                    {
-                        baseMap = shader.BaseTextureMap;
+                        meshName += meshNameCount[meshName];
                     }
 
-                    if (!String.IsNullOrEmpty(baseMap))
-                    {
-                        outputWriter.WriteLine("\"" + baseMap + "\"");
-                    }
-                    else
-                    {
-                        outputWriter.WriteLine("\"" + material.Name + "\"");
-                    }
-                }
+                    outputWriter.WriteLine("mesh:\"" + meshName + "\"");
 
-                // Write Vertices
-                outputWriter.WriteLine("vertices");
-                for (int vi = 0; vi < grannyMeshInfo.vertices.Count; vi++)
-                {
-                    GrannyVertexInfo vertex = grannyMeshInfo.vertices[vi];
-
-                    string[] boneNames = new string[8];
-                    float[] boneWeights = new float[8];
-                    int[] boneIds = new int[8];
-
-                    for (int z = 0; z < 8; z++)
+                    // Write Materials
+                    outputWriter.WriteLine("materials");
+                    foreach (IGrannyMaterial material in model.MeshBindings[mi].MaterialBindings)
                     {
-                        if (z > 3)
+                        IndieMaterial shader = NexusBuddyApplicationForm.GetIndieMaterialFromMaterial(material);
+
+                        string baseMap;
+
+                        if (shader.GetType() == typeof(IndieBuildingShader))
                         {
-                            //boneNames[z] = grannyMeshInfo.boneBindings[vertex.boneIndices[z]];
-                            boneWeights[z] = 0f;
-                            boneIds[z] = 0;
+                            baseMap = shader.Diffuse;
+
+                        }
+                        else if (shader.GetType() == typeof(IndieLandmarkStencilShader))
+                        {
+                            baseMap = shader.BaseTextureMap;
+
                         }
                         else
                         {
-                            boneNames[z] = grannyMeshInfo.boneBindings[vertex.boneIndices[z]];
-                            boneWeights[z] = (float)vertex.boneWeights[z] / 255;
-                            boneIds[z] = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneNames[z], boneWeights[z], vertex.position);
+                            baseMap = shader.BaseTextureMap;
+                        }
+
+                        if (!String.IsNullOrEmpty(baseMap))
+                        {
+                            outputWriter.WriteLine("\"" + baseMap + "\"");
+                        }
+                        else
+                        {
+                            outputWriter.WriteLine("\"" + material.Name + "\"");
                         }
                     }
 
-                    float[] tangents = new float[3];
-                    if (vertex.tangent == null)
+                    // Write Vertices
+                    outputWriter.WriteLine("vertices");
+                    for (int vi = 0; vi < grannyMeshInfo.vertices.Count; vi++)
                     {
-                        tangents[0] = vertex.normal[0];
-                        tangents[1] = vertex.normal[1];
-                        tangents[2] = vertex.normal[2];
-                    }
-                    else
-                    {
-                        tangents[0] = vertex.tangent[0];
-                        tangents[1] = vertex.tangent[1];
-                        tangents[2] = vertex.tangent[2];
+                        GrannyVertexInfo vertex = grannyMeshInfo.vertices[vi];
+
+                        string[] boneNames = new string[8];
+                        float[] boneWeights = new float[8];
+                        int[] boneIds = new int[8];
+
+                        for (int z = 0; z < 8; z++)
+                        {
+                            if (z > 3)
+                            {
+                                //boneNames[z] = grannyMeshInfo.boneBindings[vertex.boneIndices[z]];
+                                boneWeights[z] = 0f;
+                                boneIds[z] = 0;
+                            }
+                            else
+                            {
+                                boneNames[z] = grannyMeshInfo.boneBindings[vertex.boneIndices[z]];
+                                boneWeights[z] = (float)vertex.boneWeights[z] / 255;
+                                boneIds[z] = NB2Exporter.getBoneIdForBoneName(boneLookup, boneNameToPositionMap, boneNames[z], boneWeights[z], vertex.position);
+                            }
+                        }
+
+                        float[] tangents = new float[3];
+                        if (vertex.tangent == null)
+                        {
+                            tangents[0] = vertex.normal[0];
+                            tangents[1] = vertex.normal[1];
+                            tangents[2] = vertex.normal[2];
+                        }
+                        else
+                        {
+                            tangents[0] = vertex.tangent[0];
+                            tangents[1] = vertex.tangent[1];
+                            tangents[2] = vertex.tangent[2];
+                        }
+
+                        float[] binormals = new float[3];
+                        if (vertex.binormal == null)
+                        {
+                            binormals[0] = vertex.normal[0];
+                            binormals[1] = vertex.normal[1];
+                            binormals[2] = vertex.normal[2];
+                        }
+                        else
+                        {
+                            binormals[0] = vertex.binormal[0];
+                            binormals[1] = vertex.binormal[1];
+                            binormals[2] = vertex.binormal[2];
+                        }
+
+                        outputWriter.WriteLine(vertex.position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               vertex.normal[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               tangents[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               binormals[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               vertex.uv[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.uv[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + 0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + 0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
+                                               boneIds[0] + " " + boneIds[1] + " " + boneIds[2] + " " + boneIds[3] + " 0 0 0 0 " +
+                                               vertex.boneWeights[0] + " " + vertex.boneWeights[1] + " " + vertex.boneWeights[2] + " " + vertex.boneWeights[3] + " 0 0 0 0 "
+                                               );
                     }
 
-                    float[] binormals = new float[3];
-                    if (vertex.binormal == null)
+                    // Write Triangles
+                    outputWriter.WriteLine("triangles");
+                    for (int ti = 0; ti < grannyMeshInfo.triangles.Count; ti++)
                     {
-                        binormals[0] = vertex.normal[0];
-                        binormals[1] = vertex.normal[1];
-                        binormals[2] = vertex.normal[2];
+                        int[] triangle = grannyMeshInfo.triangles[ti];
+                        outputWriter.WriteLine(triangle[0] + " " + triangle[1] + " " + triangle[2] + " 0");
                     }
-                    else
-                    {
-                        binormals[0] = vertex.binormal[0];
-                        binormals[1] = vertex.binormal[1];
-                        binormals[2] = vertex.binormal[2];
-                    }
-
-                    outputWriter.WriteLine(vertex.position[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.position[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           vertex.normal[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.normal[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           tangents[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + tangents[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           binormals[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + binormals[2].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           vertex.uv[0].ToString(numberFormat, CultureInfo.InvariantCulture) + " " + vertex.uv[1].ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + 0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " + 0.00000000f.ToString(numberFormat, CultureInfo.InvariantCulture) + " " +
-                                           boneIds[0] + " " + boneIds[1] + " " + boneIds[2] + " " + boneIds[3] + " 0 0 0 0 " +
-                                           vertex.boneWeights[0] + " " + vertex.boneWeights[1] + " " + vertex.boneWeights[2] + " " + vertex.boneWeights[3] + " 0 0 0 0 "
-                                           );
-                }
-
-                // Write Triangles
-                outputWriter.WriteLine("triangles");
-                for (int ti = 0; ti < grannyMeshInfo.triangles.Count; ti++)
-                {
-                    int[] triangle = grannyMeshInfo.triangles[ti];
-                    outputWriter.WriteLine(triangle[0] + " " + triangle[1] + " " + triangle[2] + " 0");
                 }
             }
+
             outputWriter.WriteLine("end");
 
             outputWriter.Close();
-        }
 
+            return decalMeshNames;
+        }
     }
 }

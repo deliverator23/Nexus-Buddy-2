@@ -32,5 +32,20 @@ namespace NexusBuddy.GrannyWrappers
         {
             *(int*)(m_pkMaterial) = (int)MemoryUtil.getStringIntPtr(name);
         }
+
+        public IntPtr get16Ptr()
+        {
+            return ((IntPtr)m_pkMaterial + 16);
+        }
+
+        public IntPtr getExtendedDataPtr()
+        {
+            return ((IntPtr)m_pkMaterial + 20);
+        }
+
+        public string getShaderSetName()
+        {
+            return Marshal.PtrToStringAnsi((IntPtr)(sbyte*)*(int*)*(int*)(getExtendedDataPtr()));
+        }
     }
 }
