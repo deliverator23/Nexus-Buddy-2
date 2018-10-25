@@ -90,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="NexusBuddy\FileOps\CN6FileOps.cs" />
+    <Compile Include="NexusBuddy\FileOps\WriteModelToCN6Response.cs" />
     <Compile Include="NexusBuddy\GrannyWrappers\GrannyAnimationWrapper.cs" />
     <Compile Include="NexusBuddy\GrannyWrappers\GrannyTransformWrapper.cs" />
     <Compile Include="NexusBuddy\Settings.cs" />
