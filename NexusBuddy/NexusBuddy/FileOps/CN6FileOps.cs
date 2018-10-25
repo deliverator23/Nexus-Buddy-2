@@ -21,7 +21,10 @@ namespace NexusBuddy.FileOps
 
             string directory = Path.GetDirectoryName(unitListFile);
 
-            string regexString = "(.+);(.*);(.*);(.*)"; 
+            string regexString = "(.+);(.*);(.*);(.*)";
+
+            string outFilename = unitListFile.Replace(".dat", "_new.dat");
+            StreamWriter outputWriter = new StreamWriter(new FileStream(outFilename, FileMode.Create));
 
             while (!streamReader.EndOfStream)
             {
@@ -35,18 +38,41 @@ namespace NexusBuddy.FileOps
                     IGrannyFile grannyFile = grannyContext.LoadGrannyFile(directory + "\\" + gr2Filename);
                     NexusBuddyApplicationForm.loadedFile = grannyFile;
                     NexusBuddyApplicationForm.form.refreshAppData();
-                    exportAllModelsToCN6(grannyFile, true);
-                }
+                    List<string> fileTextureMaps = exportAllModelsToCN6(grannyFile, true);
 
+                    string animationFilenames = m.Groups[2].Value.Trim();
+                    string textureFilenames = m.Groups[3].Value.Trim();
+                    string prettyName = m.Groups[4].Value.Trim();
+
+                    var fileTextureSet = new HashSet<string>(fileTextureMaps);
+
+                    if (String.IsNullOrEmpty(textureFilenames))
+                    {
+                        textureFilenames = string.Join(",", fileTextureSet);
+                    }
+
+                    string newline = gr2Filename + ";" + animationFilenames + ";" + textureFilenames + ";" + prettyName;
+
+                    outputWriter.WriteLine(newline);
+                }
             }
+            streamReader.Close();
+            outputWriter.Close();
+            File.Delete(unitListFile);
+            File.Move(outFilename, unitListFile);
         }
 
-        public static void exportAllModelsToCN6(IGrannyFile grannyFile, bool isBatch)
+        public static List<string> exportAllModelsToCN6(IGrannyFile grannyFile, bool isBatch)
         {
+            List<string> fileTextureMaps = new List<string>();
+
             for (int i = 0; i < grannyFile.Models.Count; i++)
             {
-                cn6Export(grannyFile, i, isBatch);
+                List<string> textureMaps = cn6Export(grannyFile, i, isBatch);
+                fileTextureMaps.AddRange(textureMaps);
             }
+
+            return fileTextureMaps;
         }
 
         public static string GetSafeFilename(string filename)
@@ -54,23 +80,24 @@ namespace NexusBuddy.FileOps
             return string.Join("_", filename.Split(Path.GetInvalidFileNameChars())).Replace(" ", "_");
         }
 
-        public static void cn6Export(IGrannyFile grannyFile, int currentModelIndex, bool isBatch)
+        public static List<string> cn6Export(IGrannyFile grannyFile, int currentModelIndex, bool isBatch)
         {
             IGrannyModel model = grannyFile.Models[currentModelIndex];
 
-            List<string> decalMeshNames = WriteModelToCN6(grannyFile, isBatch, model, null);
+            WriteModelToCN6Response response = WriteModelToCN6(grannyFile, isBatch, model, null);
 
-            //if (model.MeshBindings.Count > 1)
-            //{
-                foreach (string decalMeshName in decalMeshNames)
-                {
-                    WriteModelToCN6(grannyFile, isBatch, model, decalMeshName);
-                }
-            //}
+            foreach (string decalMeshName in response.decalMeshNames)
+            {
+                WriteModelToCN6(grannyFile, isBatch, model, decalMeshName);
+            }
+
+            return response.textureMaps;
         }
 
-        private static List<string> WriteModelToCN6(IGrannyFile grannyFile, bool isBatch, IGrannyModel model, string filterMeshName)
+        private static WriteModelToCN6Response WriteModelToCN6(IGrannyFile grannyFile, bool isBatch, IGrannyModel model, string filterMeshName)
         {
+            List<string> textureMaps = new List<string>();
+
             string fileExtension = ".cn6";
             string outputFilename = "";
             string numberFormat = "f8";
@@ -237,7 +264,7 @@ namespace NexusBuddy.FileOps
             {
                 outputWriter.Close();
                 File.Delete(outputFilename);
-                return decalMeshNames;
+                return new WriteModelToCN6Response(decalMeshNames, textureMaps);
             }
 
             // Write Meshes
@@ -284,6 +311,7 @@ namespace NexusBuddy.FileOps
                         if (!String.IsNullOrEmpty(baseMap))
                         {
                             outputWriter.WriteLine("\"" + baseMap + "\"");
+                            textureMaps.Add(baseMap);
                         }
                         else
                         {
@@ -371,7 +399,9 @@ namespace NexusBuddy.FileOps
 
             outputWriter.Close();
 
-            return decalMeshNames;
+            WriteModelToCN6Response response = new WriteModelToCN6Response(decalMeshNames, textureMaps);
+
+            return response;
         }
     }
 }
