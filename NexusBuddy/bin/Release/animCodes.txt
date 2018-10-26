@@ -6,12 +6,14 @@
 1140 Charge_Attack   
 1160 Attack_City 
 1180 Bombardment
+1195 Unknown
 1200 Death_A   
 1220 Death_A_Idle   
 1280 Bombard_Defense   
 1285 Bombard_Defense_Idle   
 1290 Bombard_Defense_Trans_IdleA   
-1400 Run   
+1400 Run
+1420 Unknown
 1440 Stop_Run   
 1450 Shuffle   
 1460 TurnRunRight
@@ -25,6 +27,8 @@
 1620 Combat_Ready_Idle   
 1640 Combat_Ready_Idle_Trans_IdleA   
 1800 Victory   
+1990 Build
+1995 Build_Activate_Idle
 2000 IdleB   
 2020 IdleB_Trans_IdleA   
 2040 FidgetB   
@@ -32,3 +36,4 @@
 2200 Death_B   
 2220 Death_B_Idle  
 2440 Run_Stop_IdleB
+3200 Unknown
