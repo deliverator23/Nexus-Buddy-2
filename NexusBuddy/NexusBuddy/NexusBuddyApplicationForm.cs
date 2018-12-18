@@ -30,7 +30,7 @@ namespace NexusBuddy
         public static IGrannyFile loadedFile;
         public static int major_version = 2;
         public static int minor_version = 5;
-        public static int sub_minor_version = 0;
+        public static int sub_minor_version = 1;
 
         private static string loadedStringDatabaseFilename;
         private string templateFilename;
@@ -3039,6 +3039,7 @@ namespace NexusBuddy
             this.batchExportButton.Text = "Batch Export";
             this.batchExportButton.UseVisualStyleBackColor = true;
             this.batchExportButton.Click += new EventHandler(batchExport);
+            this.batchExportButton.Hide();
 
             // 
             // selectModelTabPage
