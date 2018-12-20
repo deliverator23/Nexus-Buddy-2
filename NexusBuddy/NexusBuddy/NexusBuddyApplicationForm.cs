@@ -30,7 +30,7 @@ namespace NexusBuddy
         public static IGrannyFile loadedFile;
         public static int major_version = 2;
         public static int minor_version = 5;
-        public static int sub_minor_version = 1;
+        public static int sub_minor_version = 2;
 
         private static string loadedStringDatabaseFilename;
         private string templateFilename;
