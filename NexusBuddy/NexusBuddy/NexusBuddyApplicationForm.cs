@@ -30,7 +30,7 @@ namespace NexusBuddy
         public static IGrannyFile loadedFile;
         public static int major_version = 2;
         public static int minor_version = 5;
-        public static int sub_minor_version = 2;
+        public static int sub_minor_version = 3;
 
         private static string loadedStringDatabaseFilename;
         private string templateFilename;
@@ -2815,7 +2815,7 @@ namespace NexusBuddy
             this.exportNA2Button.TabIndex = 36;
             this.exportNA2Button.Text = "Export Animation to NA2";
             this.exportNA2Button.UseVisualStyleBackColor = true;
-            this.exportNA2Button.Click += new System.EventHandler(this.batchExport);
+            this.exportNA2Button.Click += new System.EventHandler(exportNA2ButtonClick);
             // 
             // rescaleBoneNameLabel
             // 
