@@ -7,7 +7,7 @@ namespace NexusBuddy
 	internal class IndieLeaderFurShader : IndieMaterial
 	{
 		[Category("Leaderhead Fur Materials"), DisplayName("Fur_BaseMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string Fur_BaseMap
+		public override string Fur_BaseMap
 		{
 			get
 			{

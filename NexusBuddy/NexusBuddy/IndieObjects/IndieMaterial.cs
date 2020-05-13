@@ -74,6 +74,30 @@ namespace NexusBuddy
             }
         }
 
+        public virtual string DiffuseMap
+        {
+            get
+            {
+                return "DiffuseMap";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
+        public virtual string Fur_BaseMap
+        {
+            get
+            {
+                return "Fur_BaseMap";
+            }
+            set
+            {
+                var z = 0;
+            }
+        }
+
         public virtual string BaseTextureMap
         {
             get

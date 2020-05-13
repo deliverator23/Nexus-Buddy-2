@@ -8,7 +8,7 @@ namespace NexusBuddy
 	{
 
 		[Category("Simple Materials"), DisplayName("DiffuseMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string DiffuseMap
+		public override string DiffuseMap
 		{
 			get
 			{
@@ -32,7 +32,7 @@ namespace NexusBuddy
 			}
 		}
 		[Category("Simple Materials"), DisplayName("SREFMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string SREFMap
+		public override string SREFMap
 		{
 			get
 			{

@@ -19,7 +19,7 @@ namespace NexusBuddy
 			}
 		}
 		[Category("Skinned Unit Materials"), DisplayName("SREFMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string SREFMap
+		public override string SREFMap
 		{
 			get
 			{

@@ -293,15 +293,25 @@ namespace NexusBuddy.FileOps
 
                         string baseMap;
 
-                        if (shader.GetType() == typeof(IndieBuildingShader))
+                        if (shader.GetType() == typeof(IndieLeaderGlassShader))
+                        {
+                            baseMap = "Leader_cornea";
+                        }
+                        else if (shader.GetType() == typeof(IndieBuildingShader))
                         {
                             baseMap = shader.Diffuse;
-
+                        }
+                        else if (shader.GetType().Name.StartsWith("IndieLeaderFur"))
+                        {
+                            baseMap = shader.Fur_BaseMap;
+                        }
+                        else if (shader.GetType().Name.StartsWith("IndieLeader"))
+                        {
+                            baseMap = shader.DiffuseMap;
                         }
                         else if (shader.GetType() == typeof(IndieLandmarkStencilShader))
                         {
                             baseMap = shader.BaseTextureMap;
-
                         }
                         else
                         {

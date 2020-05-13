@@ -161,6 +161,13 @@ namespace NexusBuddy
         private Button concatenateNA2Button;
         private Label fpsLevel;
         private TextBox fpsTextBox;
+
+        private Label modPathLabel;
+        private TextBox modPathTextBox;
+        private Label textureFilenameLabel;
+        private TextBox textureFilenameTextBox;
+
+
         private Button openBR2Button;
         private TextBox startTimeTextBox;
 
@@ -1005,9 +1012,9 @@ namespace NexusBuddy
                 }
                 File.Copy(openFilename, tempFilename);
             }
-            int z = 1;
+
             IGrannyFile targetFile = grannyContext.LoadGrannyFile(tempFilename);
-            z = 2;
+
             return targetFile;
         }
 
@@ -1477,6 +1484,41 @@ namespace NexusBuddy
             }
         }
 
+        private void writeFilenameToTextureExtractModClick(object sender, EventArgs e)
+        {
+            writeFilenameToTextureExtractMod();
+        }
+
+        private void writeFilenameToTextureExtractMod()
+        {
+            if (!textureFilenameTextBox.Text.Contains(".dds")) {
+                textureFilenameTextBox.Text = textureFilenameTextBox.Text + ".dds";
+            }
+
+            try
+            {
+
+                var files = Directory.GetFiles(modPathTextBox.Text, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.ToLower().EndsWith(".gr2"));
+
+                foreach (string filename in files)
+                {
+
+                    IGrannyFile grannyFile = openFileAction(filename);
+                    IGrannyMaterial grannyMaterial = grannyFile.Materials[0];
+                    IndieLeaderOpaqueMatteShader shader = new IndieLeaderOpaqueMatteShader(grannyMaterial);
+                    shader.Matte = textureFilenameTextBox.Text;
+                    saveAsAction(grannyFile, modPathTextBox.Text + "\\" + getShortFilename(filename), false);
+
+                }
+                cleardownAllData();
+                refreshAppDataWithMessage("FILENAME " + textureFilenameTextBox.Text + " WRITTEN TO TEXTURE EXTRACT MOD.");
+            }
+            catch (Exception e)
+            {
+                refreshAppDataWithMessage("FAILED - ATTEMPT TO WRITE FILENAME TO TEXTURE EXTRACT MOD.");
+            }
+        }
+
         private void resaveAllFilesInDirButtonClick(object sender, EventArgs e)
         {
             resaveAllFilesInDir();
@@ -1502,8 +1544,13 @@ namespace NexusBuddy
 
                 foreach (string filename in files)
                 {
-                    IGrannyFile grannyFile = openFileAction(filename);
-                    saveAsAction(grannyFile, folderBrowserDialog.SelectedPath + "\\resaveBatch\\" + getShortFilename(filename), false);
+                    try { 
+                        IGrannyFile grannyFile = openFileAction(filename);
+                        saveAsAction(grannyFile, folderBrowserDialog.SelectedPath + "\\resaveBatch\\" + getShortFilename(filename), false);
+                    }
+                    catch (Exception e)
+                    {
+                    }
                 }
                 cleardownAllData();
                 refreshAppDataWithMessage("ALL FILES IN DIRECTORY RESAVED.");
@@ -2211,6 +2258,12 @@ namespace NexusBuddy
             this.otherActionsTabPage = new System.Windows.Forms.TabPage();
             this.fpsLevel = new System.Windows.Forms.Label();
             this.fpsTextBox = new System.Windows.Forms.TextBox();
+
+            this.modPathLabel = new System.Windows.Forms.Label();
+            this.modPathTextBox = new System.Windows.Forms.TextBox();
+            this.textureFilenameLabel = new System.Windows.Forms.Label();
+            this.textureFilenameTextBox = new System.Windows.Forms.TextBox();
+
             this.concatenateNA2Button = new System.Windows.Forms.Button();
             this.angleLabel = new System.Windows.Forms.Label();
             this.axisLabel = new System.Windows.Forms.Label();
@@ -2378,12 +2431,12 @@ namespace NexusBuddy
             // overwriteBR2Button
             // 
             this.overwriteBR2Button.Location = new System.Drawing.Point(67, 5);
-            this.overwriteBR2Button.Name = "overwriteBR2Button";
+            this.overwriteBR2Button.Name = "topOpenBR2Button";
             this.overwriteBR2Button.Size = new System.Drawing.Size(82, 33);
             this.overwriteBR2Button.TabIndex = 6;
-            this.overwriteBR2Button.Text = "Ovwr. BR2";
+            this.overwriteBR2Button.Text = "Open BR2";
             this.overwriteBR2Button.UseVisualStyleBackColor = true;
-            this.overwriteBR2Button.Click += new System.EventHandler(this.overwriteMeshesButtonClick);
+            this.overwriteBR2Button.Click += new System.EventHandler(this.openBR2ButtonClick);
             // 
             // openButton
             // 
@@ -2673,6 +2726,12 @@ namespace NexusBuddy
             this.otherActionsTabPage.Controls.Add(this.openBR2Button);
             this.otherActionsTabPage.Controls.Add(this.fpsLevel);
             this.otherActionsTabPage.Controls.Add(this.fpsTextBox);
+
+            this.otherActionsTabPage.Controls.Add(this.modPathLabel);
+            this.otherActionsTabPage.Controls.Add(this.modPathTextBox);
+            this.otherActionsTabPage.Controls.Add(this.textureFilenameLabel);
+            this.otherActionsTabPage.Controls.Add(this.textureFilenameTextBox);
+
             this.otherActionsTabPage.Controls.Add(this.concatenateNA2Button);
             this.otherActionsTabPage.Controls.Add(this.angleLabel);
             this.otherActionsTabPage.Controls.Add(this.axisLabel);
@@ -2731,6 +2790,47 @@ namespace NexusBuddy
             this.fpsTextBox.Size = new System.Drawing.Size(139, 22);
             this.fpsTextBox.TabIndex = 43;
             this.fpsTextBox.Text = "60";
+
+
+            // 
+            // modPathLabel
+            // 
+            this.modPathLabel.AutoSize = true;
+            this.modPathLabel.Location = new System.Drawing.Point(6, 224);
+            this.modPathLabel.Name = "modPathLabel";
+            this.modPathLabel.Size = new System.Drawing.Size(60, 16);
+            this.modPathLabel.TabIndex = 44;
+            this.modPathLabel.Text = "Mod Path";
+            // 
+            // modPathTextBox
+            // 
+            this.modPathTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.modPathTextBox.Location = new System.Drawing.Point(70, 221);
+            this.modPathTextBox.Name = "modPathTextBox";
+            this.modPathTextBox.Size = new System.Drawing.Size(186, 22);
+            this.modPathTextBox.TabIndex = 43;
+            this.modPathTextBox.Text = "C:\\Users\\User\\Documents\\My Games\\Sid Meier's Civilization 5\\MODS\\Leader Graphics Texture Extract Mod (v 1)\\art";
+
+            // 
+            // textureFilenameLabel
+            // 
+            this.textureFilenameLabel.AutoSize = true;
+            this.textureFilenameLabel.Location = new System.Drawing.Point(6, 251);
+            this.textureFilenameLabel.Name = "textureFilenameLabel";
+            this.textureFilenameLabel.Size = new System.Drawing.Size(80, 16);
+            this.textureFilenameLabel.TabIndex = 44;
+            this.textureFilenameLabel.Text = "Texture Filename";
+            // 
+            // textureFilenameTextBox
+            // 
+            this.textureFilenameTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.textureFilenameTextBox.Location = new System.Drawing.Point(100, 248);
+            this.textureFilenameTextBox.Name = "textureFilenameTextBox";
+            this.textureFilenameTextBox.Size = new System.Drawing.Size(156, 22);
+            this.textureFilenameTextBox.TabIndex = 43;
+            this.textureFilenameTextBox.Text = "Ashurbanipal_Skin_DIFF.dds";
+
+
             // 
             // concatenateNA2Button
             // 
@@ -2741,6 +2841,9 @@ namespace NexusBuddy
             this.concatenateNA2Button.Text = "Concatenate All NA2 Files in Directory";
             this.concatenateNA2Button.UseVisualStyleBackColor = true;
             this.concatenateNA2Button.Click += new System.EventHandler(this.concatenateNA2ButtonClick);
+            this.concatenateNA2Button.Hide();
+
+
             // 
             // angleLabel
             // 
@@ -3142,9 +3245,10 @@ namespace NexusBuddy
             this.openBR2Button.Name = "openBR2Button";
             this.openBR2Button.Size = new System.Drawing.Size(250, 40);
             this.openBR2Button.TabIndex = 45;
-            this.openBR2Button.Text = "Open BR2";
+            this.openBR2Button.Text = "Set Filename in Texture Extract Mod";
             this.openBR2Button.UseVisualStyleBackColor = true;
-            this.openBR2Button.Click += new System.EventHandler(this.openBR2ButtonClick);
+            this.openBR2Button.Click += new System.EventHandler(this.writeFilenameToTextureExtractModClick);
+            //this.openBR2Button.Hide();
             // 
             // animation
             // 

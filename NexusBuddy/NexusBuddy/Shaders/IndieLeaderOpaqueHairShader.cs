@@ -7,7 +7,7 @@ namespace NexusBuddy
 	internal class IndieLeaderOpaqueHairShader : IndieMaterial
 	{
 		[Category("Leaderhead Materials"), DisplayName("DiffuseMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string DiffuseMap
+		public override string DiffuseMap
 		{
 			get
 			{
@@ -31,7 +31,7 @@ namespace NexusBuddy
 			}
 		}
 		[Category("Leaderhead Materials"), DisplayName("SREFMap"), Editor(typeof(FilteredFileNameEditor), typeof(UITypeEditor))]
-		public string SREFMap
+		public override string SREFMap
 		{
 			get
 			{
