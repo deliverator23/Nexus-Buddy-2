@@ -1244,16 +1244,10 @@ namespace NexusBuddy
 
                 triggerSystem.triggers = triggersList.ToArray();
 
-                //int maxTriggerId = 0;
                 HashSet<int> animCodesSet = new HashSet<int>();
                 int currentId = 0;
                 foreach (trigger_systemTriggersTrigger trigger in triggersList)
                 {
-                    // int triggerId = Int32.Parse(trigger.id);
-                    // if (triggerId > maxTriggerId)
-                    //{
-                    //    maxTriggerId = triggerId;
-                    //}
                     trigger.id = currentId.ToString();
                     if (trigger.type.Equals("FTimedTriggerTransfer"))
                     {
@@ -1262,19 +1256,6 @@ namespace NexusBuddy
                     animCodesSet.Add(int.Parse(trigger.ec));
                     currentId++;
                 }
-
-                // Determine max trigger ID
-                //int maxTriggerId = 0;
-                //HashSet<int> animCodesSet = new HashSet<int>();
-                //foreach (trigger_systemTriggersTrigger trigger in triggersList)
-                //{
-                //    int triggerId = Int32.Parse(trigger.id);
-                //    if (triggerId > maxTriggerId)
-                //    {
-                //        maxTriggerId = triggerId;
-                //    }
-                //    animCodesSet.Add(int.Parse(trigger.ec));
-                //}
 
                 string newfilename = filename.ToLower().Replace(".ftsxml", "_.ftsxml");
                 TextWriter writer = new StreamWriter(newfilename);
@@ -1312,8 +1293,14 @@ namespace NexusBuddy
                     for (int i = 0; i < triggerLines.Count; i++)
                     {
                         if (triggerLines[i].Contains("ec=\"" + animCode + "\""))
-                        {                   
-                            triggerLines.Insert(i, "    <!-- ec=\"" + animCode + "\" " + animCodeNames[animCode] + " -->");
+                        {
+                            string animCodeName = "";
+                            if (animCodeNames.ContainsKey(animCode))
+                            {
+                                animCodeName = animCodeNames[animCode];
+                            }
+
+                            triggerLines.Insert(i, "    <!-- ec=\"" + animCode + "\" " + animCodeName + " -->");
                             if (!first)
                             {
                                 triggerLines.Insert(i, "");
